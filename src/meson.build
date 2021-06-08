@@ -3,6 +3,11 @@
 sources = [
 	'instruments/instrument.cpp',
 	'instruments/instrument_dumb.cpp',
+	'instruments/seno.cpp',
+	'instruments/percussion.cpp',
+	'instruments/percussion_pitch.cpp',
+	'instruments/percussion_sample.cpp',
+	'instruments/strings.cpp',
 	'synth/envelope_adsr.cpp',
 	'synth/midi_score.cpp',
 	'synth/multinote_instr.cpp',

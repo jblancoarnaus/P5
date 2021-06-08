@@ -16,10 +16,18 @@ int readwav_mono(const string &filename, unsigned int &sampling_freq, vector<flo
   x.clear();
   sampling_freq = 0;
 
+/*std::string survey_fname;
+std::string dir(__FILE__);
+dir = dir.substr(0, dir.find_last_of("\\/"));
+printf("\n");
+for(int i=0;i<dir.length();i++)
+  printf("%c", dir[i]);
+*/
   sndfile_in = sf_open(filename.c_str(), SFM_READ, &sf_info);
+  //printf("\nchannesl %d\n",sf_info.channels);
   if (sndfile_in == 0) //Error opening input file
     return -1;
-
+printf("channesl %d\n",sf_info.channels);
   if (sf_info.channels  != 1) //Only mono files supported!
     return -2;
 
