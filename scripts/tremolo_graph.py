@@ -13,7 +13,7 @@ x = np.array(data)
 for i in range(len(x)-1):
   if x[i]==0 and x[i+1]==0:
     total_length_samples = i
-    break
+    break;
 
 first_index=0
 last_index = total_length_samples
@@ -26,11 +26,12 @@ peaks=[]
 valleys=[]
 pos_peaks=[]
 pos_valleys=[]
+peaks_valleys=[]
 for i in range(len(pos)):
   value = x[pos[i]]
   index = pos[i]
 
-  peaks_valleys[i] = value
+  peaks_valleys.append(value)
   if value > 0:
     peaks.append(value)
     pos_peaks.append(index)
@@ -38,7 +39,6 @@ for i in range(len(pos)):
   else:
     valleys.append(value)
     pos_valleys.append(index)
-    k=k+1
 
 #convert to seconds
 pos_peaks=np.array(pos_peaks)/fm
@@ -48,6 +48,8 @@ pos=pos/fm
 #interpolate values
 f_peaks = spi.interp1d(pos_peaks,peaks, kind='cubic',bounds_error=False)
 f_valleys = spi.interp1d(pos_valleys,valleys, kind='cubic',bounds_error=False)
+
+t = np.linspace(first_index_s,last_index/fm,num=len(x))
 interpolated_valleys = f_valleys(t)
 interpolated_peaks = f_peaks(t)
 
@@ -76,7 +78,6 @@ first_max = x[max_pos]
 first_min = x[min_pos]
 
 
-t = np.linspace(first_index_s,last_index/fm,num=len(x))
 
 plt.plot(t, x, c='tab:blue',linewidth = 0.4,label='Signal')
 plt.plot(t[max_pos:max_pos+(min_pos-max_pos)*2], x[max_pos:max_pos+(min_pos-max_pos)*2], c='tab:green',linewidth =0.6,label='1 Tm period')

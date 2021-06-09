@@ -1,6 +1,7 @@
 #include <iostream>
 #include "tremolo.h"
 #include "vibrato.h"
+#include "distortion.h"
 
 /*
   For each new effect:
@@ -17,6 +18,9 @@ namespace upc {
     //    cout << name << ": " << parameters << endl;
     if (name == "Tremolo") {
       pEffect = (Effect *) new Tremolo(parameters);
+    }
+    if (name == "Distortion") {
+      pEffect = (Effect *) new Distortion(parameters);
     }
 	else if (name == "Vibrato") {
       pEffect = (Effect *) new Vibrato(parameters);
