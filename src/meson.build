@@ -4,6 +4,8 @@ sources = [
 	'instruments/instrument.cpp',
 	'instruments/instrument_dumb.cpp',
 	'instruments/seno.cpp',
+	'instruments/seno_fm.cpp',
+	'instruments/seno_vibrato.cpp',
 	'instruments/percussion.cpp',
 	'instruments/percussion_pitch.cpp',
 	'instruments/percussion_sample.cpp',
@@ -17,6 +19,7 @@ sources = [
 	'effects/tremolo.cpp',
 	'effects/vibrato.cpp',
 	'effects/distortion.cpp',
+	'effects/flanging.cpp',
 ]
 
 executable(

@@ -30,7 +30,7 @@ Strings::Strings(const std::string &param)
   int error = 0;
   if ((file_name = kv("file")) == kv_null)
   {
-    cerr << "Error: no se ha encontrado el campo con el fichero de la señal para un instrumento FicTabla" << endl;
+    cerr << "Error: no se ha encontrado el campo con el fichero de la señal para un instrumento FicTabla.\nUsando sinusoide por defecto..." << endl;
     //Create a tbl with one period of a sinusoidal wave
     tbl.resize(N);
     float phase = 0, step = 2 * M_PI / (float)N;
@@ -45,8 +45,6 @@ Strings::Strings(const std::string &param)
   {
     unsigned int fm;
     error = readwav_mono(file_name, fm, tbl);
-
-    printf("\n%d\n", error);
     if (error < 0)
     {
       cerr << "Error: no se puede leer el fichero " << file_name << " para un instrumento FicTabla" << endl;
@@ -67,6 +65,9 @@ void Strings::command(long cmd, long note, long vel)
     float f0note = pow(2, ((float)note - 69) / 12) * 440; //convert note in semitones to frequency (Hz)
     float Nnote = 1 / f0note * SamplingRate;              //obtain note period in samples
     index_step = (float)N / Nnote;                        //obtain step (relationship between table period and note period)
+    if (vel > 127)
+      vel = 127;
+
     A = vel / 127.;
   }
   else if (cmd == 8)
@@ -89,30 +90,33 @@ const vector<float> &Strings::synthesize()
   }
   else if (not bActive)
     return x;
-  unsigned int index_floor, next_index;
-  float weight;
+  unsigned int index_floor, next_index; //interpolation indexes
+  float weight;   //interpolation weights
   for (unsigned int i = 0; i < x.size(); ++i)
   {
+    //check if the floating point index is out of bounds
+   if (floor(index) > tbl.size()-1)
+      index = index-floor(index);
 
-    //Obtain the index according to the step
-    weight = index * index_step;
-    index_floor = floor(weight);
-    weight = weight - index_floor;
-    //fix second index if needed
-    if (index_floor >= (unsigned int)N)
+    //Obtain the index as an integer
+    index_floor = floor(index);
+    weight = index - index_floor;
+
+    //fix interpolation indexes if needed
+    if (index_floor == (unsigned int)N-1)
     {
       next_index = 0;
-      index_floor = N;
+      index_floor = N-1;
     }
     else
     {
       next_index = index_floor + 1;
     }
+    //interpolate table values
     x[i] = A * ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
 
-    index++;
-    if (index_floor >= tbl.size())
-      index = index_floor - tbl.size();
+    //update real index
+    index = index + index_step;
   }
   adsr(x); //apply envelope to x and update internal status of ADSR
 

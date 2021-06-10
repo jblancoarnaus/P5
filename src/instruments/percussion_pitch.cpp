@@ -28,6 +28,8 @@ PercussionPitch::PercussionPitch(const std::string &param)
     adsr_a = 0.01; //default value
   if (!kv.to_float("ADSR_D", adsr_d))
     adsr_d = 0.01; //default value
+  if (!kv.to_float("decay", adsr_d))
+    decay_constant = 0.99935; //default value
 
   total_attack_length = round((adsr_d + adsr_a) * (float)SamplingRate);
   //Create a tbl with one period of a sinusoidal wave
@@ -40,7 +42,7 @@ PercussionPitch::PercussionPitch(const std::string &param)
   int error = 0;
   if ((file_name = kv("file")) == kv_null)
   {
-    cerr << "Error: no se ha encontrado el campo con el fichero de la señal para un instrumento FicTabla" << endl;
+    cerr << "Error: no se ha encontrado el campo con el fichero de la señal para un instrumento FicTabla.\nUsando sinusoide por defecto..." << endl;
     //Create a tbl with one period of a sinusoidal wave
     tbl.resize(N);
     float phase = 0, step = 2 * M_PI / (float)N;
@@ -55,7 +57,6 @@ PercussionPitch::PercussionPitch(const std::string &param)
   {
     unsigned int fm;
     error = readwav_mono(file_name, fm, tbl);
-
     if (error < 0)
     {
       cerr << "Error: no se puede leer el fichero " << file_name << " para un instrumento FicTabla" << endl;
@@ -107,28 +108,29 @@ const vector<float> &PercussionPitch::synthesize()
   else if (not bActive)
     return x;
 
-  unsigned int index_floor, next_index;
-  float weight;
+  unsigned int index_floor, next_index; //interpolation indexes
+  float weight;                         //interpolation weights
   for (unsigned int i = 0; i < x.size(); ++i)
   {
+    //check if the floating point index is out of bounds
+    if (floor(index) > tbl.size() - 1)
+      index = index - floor(index);
 
-    //Obtain the index according to the step
-    weight = index * index_step;
-    index_floor = floor(weight);
-    weight = weight - index_floor;
-    //fix second index if needed
-    if (index_floor >= (unsigned int)N)
+    //Obtain the index as an integer
+    index_floor = floor(index);
+    weight = index - index_floor;
+
+    //fix interpolation indexes if needed
+    if (index_floor == (unsigned int)N - 1)
     {
       next_index = 0;
-      index_floor = N;
+      index_floor = N - 1;
     }
     else
     {
       next_index = index_floor + 1;
     }
-    if (index_floor >= tbl.size())
-      index = index_floor - tbl.size();
-
+    //interpolate table values
     x[i] = A * ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
 
     if (total_samples_played != -1)
@@ -138,7 +140,7 @@ const vector<float> &PercussionPitch::synthesize()
 
     if (gotInterrupted)
     {
-      x[i] = x[i] * pow(0.99935, (int)interrupted_count);
+      x[i] = x[i] * pow(decay_constant, (int)interrupted_count);
       interrupted_count++;
     }
 
@@ -147,10 +149,9 @@ const vector<float> &PercussionPitch::synthesize()
       adsr.stop(); //begin release phase immediately
       total_samples_played = -1;
     }
-    if (x[i] > 0.9)
-      x[i] = 0.9;
 
-    index++;
+    //update real index
+    index = index + index_step;
   }
   adsr(x); //apply envelope to x and update internal status of ADSR
 

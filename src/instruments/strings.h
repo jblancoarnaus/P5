@@ -9,9 +9,9 @@
 namespace upc {
   class Strings: public upc::Instrument {
     EnvelopeADSR adsr;
-    unsigned int index;
+    float index;
     int N;
-  	float A, index_step;
+	float A, index_step;
     std::vector<float> tbl;
   public:
     Strings(const std::string &param = "");

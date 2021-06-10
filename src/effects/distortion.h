@@ -8,8 +8,7 @@
 namespace upc {
   class Distortion: public upc::Effect {
     private:
-      float fase, inc_fase;
-	  float	t, tm, shift;
+	  float	t, tm;
     public:
       Distortion(const std::string &param = "");
 	  void operator()(std::vector<float> &x);

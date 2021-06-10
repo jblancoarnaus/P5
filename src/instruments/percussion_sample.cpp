@@ -51,7 +51,6 @@ void PercussionSample::command(long cmd, long note, long vel)
   if (cmd == 9)
   { //'Key' pressed: attack begins
     bActive = true;
-    adsr.start();
     index = 0;
     if (vel > 127)
       vel = 127;
@@ -62,13 +61,8 @@ void PercussionSample::command(long cmd, long note, long vel)
 const vector<float> &PercussionSample::synthesize()
 {
 
-  if (not adsr.active())
-  {
-    x.assign(x.size(), 0);
-    bActive = false;
-    return x;
-  }
-  else if (not bActive)
+
+  if (not bActive)
     return x;
 
   for (unsigned int i = 0; i < x.size(); ++i)
@@ -83,7 +77,6 @@ const vector<float> &PercussionSample::synthesize()
       for(long unsigned int j=i;j<x.size();j++){
         x[j] = 0;
       }
-      adsr.end();
       bActive=false;
     }
   }

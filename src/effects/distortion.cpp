@@ -12,7 +12,6 @@ static float SamplingRate = 44100;
 
 Distortion::Distortion(const std::string &param)
 {
-  fase = 0;
 
   KeyValue kv(param);
 
@@ -21,23 +20,20 @@ Distortion::Distortion(const std::string &param)
   if (!kv.to_float("tm", tm))
     tm = 0.01;
 
-  if (!kv.to_float("shift", shift))
-    shift = 0.05;
-
-  tm = tm*SamplingRate;
+  tm = tm * SamplingRate;
 }
 
 void Distortion::command(unsigned int comm)
 {
-  if (comm == 1)
-    fase = 0;
+  if (comm == 0)
+    t = 1;
 }
 
 void Distortion::operator()(std::vector<float> &x)
 {
   float max, min;
   int window_count = 0;
-
+  
   for (unsigned int i = 0; i < x.size(); i++)
   {
 

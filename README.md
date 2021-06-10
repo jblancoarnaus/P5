@@ -28,61 +28,66 @@ permitan visualizar el funcionamiento de la curva ADSR.
 * Un instrumento con una envolvente ADSR genérica, para el que se aprecie con claridad cada uno de sus
   parámetros: ataque (A), caída (D), mantenimiento (S) y liberación (R).
 
-  Tanto *InstrumentDumb* como *Seno* usan una envolvente genérica:
-
-   <p align="center">
-   <img src="img/adsr_graph1.png" width="540" align="center">
-   </p
-
-  Código en ``plot_adsr.py``
-
-* Un instrumento *percusivo*, como una guitarra o un piano, en el que el sonido tenga un ataque rápido, no
-  haya mantenimiemto y el sonido se apague lentamente.
+* Un instrumento *percusivo*, como una guitarra o un piano, en el que el sonido tenga un ataque rápido, no haya mantenimiemto y el sonido se apague lentamente.
   - Para un instrumento de este tipo, tenemos dos situaciones posibles:
     * El intérprete mantiene la nota *pulsada* hasta su completa extinción.
     * El intérprete da por finalizada la nota antes de su completa extinción, iniciándose una disminución
 	  abrupta del sonido hasta su finalización.
   - Debera representar en esta memoria **ambos** posibles finales de la nota.
 
-  El instrumento creado con estas características ha sido ``Percussion``, que luego se ha adaptado para tener el pitch adecuado según la nota que se toque (``PercussionPitch``) o bien usar *samples* (``PercussionSample``)
-  Su envolvente si termina el sonido sin ser interrumpido es la siguiente:
-
-   <p align="center">
-   <img src="img/adsr_graph2.png" width="540" align="center">
-   </p
-
-  Cuando se produce una interrupción, hemos hecho que decaiga de manera exponencial según avanzan las muestras desde que se haya interrumpido. Cambiando el valor de la constante, podemos conseguir una disminución más o menos abrupta.
-
-  ```cpp
-  if (gotInterrupted)
-  {
-    x[i] = x[i] * pow(0.99935, (int)interrupted_count);
-    interrupted_count++;
-  }
-  ```
-
-  La envolvente en este caso es: 
-
-   <p align="center">
-   <img src="img/adsr_graph3.png" width="540" align="center">
-   </p
-
 * Un instrumento *plano*, como los de cuerdas frotadas (violines y semejantes) o algunos de viento. En
   ellos, el ataque es relativamente rápido hasta alcanzar el nivel de mantenimiento (sin sobrecarga), y la
   liberación también es bastante rápida.
-
-  Para este caso se ha creado la clase ``Strings``. La envolvente resultante es la siguiente:
-
-    <p align="center">
-   <img src="img/adsr_graph4.png" width="540" align="center">
-   </p
-
-  Esta, al igual que ``PercussionPitch`` también ha sido adaptada para tocar las notas correspondientes.
 
 Para los cuatro casos, deberá incluir una gráfica en la que se visualice claramente la curva ADSR. Deberá
 añadir la información necesaria para su correcta interpretación, aunque esa información puede reducirse a
 colocar etiquetas y títulos adecuados en la propia gráfica (se valorará positivamente esta alternativa).
 
+#### Instrumento *genérico*
+
+Tanto *InstrumentDumb* como *Seno* usan una envolvente genérica:
+
+<p align="center">
+<img src="img/adsr_graph1.png" width="540" align="center">
+</p
+
+El código usado para representar todas las gráficas de este apartado se encuentra en ``scripts/plot_adsr.py``
+
+#### Instrumento *percusivo*
+
+El instrumento creado con estas características ha sido ``Percussion``, que luego se ha adaptado para tener el pitch adecuado según la nota que se toque (``PercussionPitch``) o bien si se usan *samples*, caso en el que siempre se reproduce el sonido completo sin alteración de pitch (``PercussionSample``)
+
+Su envolvente cuando termina el sonido sin ser interrumpido es la siguiente:
+
+<p align="center">
+<img src="img/adsr_graph2.png" width="540" align="center">
+</p
+
+En el caso de que se produzca una interrupción (la tecla deja de ser pulsada), hemos hecho que decaiga de manera exponencial según avanzan las muestras desde que se haya interrumpido. Cambiando el valor de la constante, podemos conseguir una disminución más o menos abrupta.
+
+```cpp
+if (gotInterrupted)
+{
+  x[i] = x[i] * pow(0.99935, (int)interrupted_count);
+  interrupted_count++;
+}
+```
+
+La envolvente en este caso es: 
+
+<p align="center">
+ <img src="img/adsr_graph3.png" width="540" align="center">
+ </p
+
+#### Instrumento *plano*
+
+Para este caso, se ha creado la clase ``Strings``. La envolvente resultante es la siguiente:
+
+<p align="center">
+<img src="img/adsr_graph4.png" width="540" align="center">
+</p
+
+  Esta, al igual que ``PercussionPitch`` también ha sido adaptada para tocar las notas correspondientes.
 ### Instrumentos Dumb y Seno.
 
 Implemente el instrumento `Seno` tomando como modelo el `InstrumentDumb`. La señal **deberá** formarse
@@ -191,25 +196,57 @@ const vector<float> &Seno::synthesize()
   return x;
 }
 ```
-Además, hemos añadido interpolación lineal para los puntos que no se encontraran en la tabla, lo cual da ligeramente mejores resultados:
+Como se puede ver en el código, hemos añadido interpolación lineal para los puntos que no se encontraran en la tabla. Interpolando ahora tenemos la opción de tener en cuenta cómo tratamos el *'reseteo'* del índice a medida que iteramos. En primer lugar, habíamos forzado que el índice, ya tomando valores decimales, fuese forzado a 0 cuando se saliera de la tabla. De este modo, aparece un pequeño desencaje en la sinusoide generada, ya que el valor 0 no es necesariamente la fase que le corresponde (en la gráfica se puede ver como uno de los escalones se repite). Luego, hemos optado resetear el índice con el valor correspondiente (índice actual - N), que posiblemente será 0 con algunos decimales. Esto permite que la fase avance y no se *'resetee'* cada vez que termina de leer la tabla, lo cual produce resultados bastante diferentes en cuanto al sonido.
 
-   <p align="center">
-   <img src="img/seno_graph1.png" width="540" align="center">
-   </p
+<p align="center">
+<img src="img/seno_graph1.png" width="540" align="center">
+</p
 
-   Código en ``seno_zoom.py``
+Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_index_correction.wav`,`seno_without_index_correction.wav` y `seno_without_interp.wav`).
 
 - Explique qué método se ha seguido para asignar un valor a la señal a partir de los contenidos en la tabla,
   e incluya una gráfica en la que se vean claramente (use pelotitas en lugar de líneas) los valores de la
   tabla y los de la señal generada.
+  
+  Para obtener los valores de la señal se ha usado una interpolación lineal. Para implementarla, primero obtenemos el entero más cercano a la baja ``index_floor``. Haciendo esto en vez de un ``round``, nos podemos asegurar que siempre estaremos en el mismo caso (el valor almacenado en index_floor será la primera posición entre las que interpolar) y así obtener ``next_index`` sumándole 1. La ponderación para los valores con cada uno de los índices se hace con ``weight``, variable que es la diferencia entre el índice *real* y el entero inferior más próximo, y, a su vez, contiene la información de "como de cerca" están cada una de las dos posiciones, lo cual nos sirve para darle más o menos peso. 
+
+  ```cpp 
+  //Obtain the index according to the step
+  index_floor = floor(index * index_step);
+  weight = index * index_step - index_floor;
+  next_index = index_floor + 1;
+  x[i] = A * ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
+
+  ```
+  A continuación, podemos ver cada valor interpolado junto a los valores de la tabla que se usan:
 
    <p align="center">
    <img src="img/seno_graph2.png" width="540" align="center">
    </p
+
 - Si ha implementado la síntesis por tabla almacenada en fichero externo, incluya a continuación el código
   del método `command()`.
 
-  Algo observado al usar tablas externas, es que las notas graves suelen dar bastantes mejores resultados. Lógicamente, al tener períodos más largos tenemos más muestras *reales*, al contrario que las notas agudas, donde se habrá de interpolar más valores sobre una tabla con menos información.
+  El método de ``command()`` de ``PercussionSample`` (por ejemplo) es el siguiente:
+  ```cpp
+  void PercussionSample::command(long cmd, long note, long vel)
+  {
+    if (cmd == 9)
+    { //'Key' pressed: attack begins
+      bActive = true;
+      index = 0;
+      if (vel > 127)
+        vel = 127;
+      A = vel / 127.;
+    }
+  }
+  ```
+
+  Este es el único caso en que la reproducción nunca se interrumpe o acaba independientemente de los comandos en los *scores*. El envolvente ADSR tampoco tiene ningún efecto sobre la grabación.
+  
+  El resto de métodos ``command()`` siguen manteniendo los casos específicos según se recibe ``cmd == 8`` o ``cmd == 0``.
+
+  Algo observado al estar usando tablas externas, es que usar notas graves para la tabla suele dar bastantes mejores resultados. Lógicamente, al tener períodos más largos (frecuencias más bajas) tenemos más muestras *reales*, al contrario que las notas agudas, donde se habrá de interpolar más valores sobre una tabla con menos información.
 
 ### Efectos sonoros.
 
@@ -218,19 +255,101 @@ Además, hemos añadido interpolación lineal para los puntos que no se encontra
   índice de modulación) en la señal generada (se valorará que la explicación esté contenida en las propias
   gráficas, sin necesidad de *literatura*).
 
-  Para esta parte, hemos generado señales usando ``doremi.sco`` (quedándonos con la primera nota) y ``Seno`` con valores para que el estado *sustain* sea el tramo predominante.
-  
-  Si generamos un señal con Tremolo A=0.5; fm=6;:
+  Para esta parte, hemos generado señales usando ``doremi.sco`` (quedándonos con la primera nota) y ajustando ``Seno`` con valores para que el estado *sustain* sea el tramo predominante.
+
+  #### Trémolo 
+
+  El caso del trémolo consiste en escalar la señal con una sinusoide de frecuencia ``fm`` y amplitud ``A``, lo cual se refleja en una variación de amplitud que oscila con esta frecuencia. Con señales sencillas (como la sinusoide ideal que hemos generado), podemos estimar la envolvente que genera esta segunda sinusoide interpolando los máximos y mínimos locales de la sinusoide principal:
 
    <p align="center">
-   <img src="img/tremolo_graph.png" width="540" align="center">
+   <img src="img/tremolo_graph.png" width="640" align="center">
    </p
 
-   Código en ``tremolo_graph.py``
+  *Parámetros: Tremolo A=0.5; fm=4;*
+
+  A partir de la relación entre los máximos y mínimos de la envolvente se puede obtener ``A``. El periodo de la envolvente corresponde al de la señal usada para escalar la sinusoide principal.
+
+  El código para generar esta gráfica y estimar los parámetros se encuentra en ``scripts/tremolo_graph.py``
+
+  #### Vibrato
+
 - Si ha generado algún efecto por su cuenta, explique en qué consiste, cómo lo ha implementado y qué
   resultado ha producido. Incluya, en el directorio `work/ejemplos`, los ficheros necesarios para apreciar
   el efecto, e indique, a continuación, la orden necesaria para generar los ficheros de audio usando el
   programa `synth`.
+
+  El efecto que hemos implementado ha sido la *distorsión*, que consiste saturar la salida por encima de un umbral concreto (*clipping*), lo que, tal como dice el nombre, genera una distorsión audible.
+
+  Para implementarlo, considerando que nuestras señales tienen amplitudes variables (envolvente ADSR), hemos usado una ventana deslizante para que el clipping se realizara de forma local. 
+
+  Los parámetros de entrada desde el fichero `effects` un umbral `t`, que es el porcentaje de la amplitud respecto el cual se hará el clipping, y un tiempo `tm`, que es la duración de la ventana en segundos. Teniendo estos valores en cuenta, se calculan los valores mínimos y máximos de la ventana y se recorta la señal respecto ellos:
+
+  ```cpp
+	void Distortion::operator()(std::vector<float> &x)
+	{
+	  float max, min;
+	  int window_count = 0;
+
+	  for (unsigned int i = 0; i < x.size(); i++)
+	  {
+
+		//update maximum and minimum clipping value
+		if (window_count == 0)
+		{
+		  max = 0;
+		  min = 0;
+
+		  for (unsigned int j = i; j < i + tm; j++)
+		  {
+			//quit search if the end of x has been reached
+			if (j > x.size())
+			{
+			  break;
+			}
+
+			if (max < x[j])
+			{
+			  max = x[j];
+			}
+			if (min > x[j])
+			{
+			  min = x[j];
+			}
+		  }
+		}
+		//clip the signal if needed
+		if (((max * t) < x[i]))
+		{
+		  x[i] = max * t;
+		}
+		if (((min * t) > x[i]))
+		{
+		  x[i] = min * t;
+		}
+
+		window_count++;
+		if (window_count > tm)
+		{
+		  window_count = 0;
+		}
+	  }
+	}
+  ```
+
+  Dado a como está implementado, se obtienen mejores resultados con frecuencias altas, ya que garantizan que el máximo de la sinusoide se encuentre en la ventana escogida. Además, en el caso particular de usar `tm`s pequeñas, podemos obtener un *clipping* más suave, que se percibe como una disminución de volumen:
+
+   <p align="center">
+   <img src="img/distortion_graph.png" width="540" align="center">
+   </p
+
+  La orden para aplicar los efectos ha sido:
+
+  ```bash
+  synth -e work/effects.orc work/percussion.orc work/doremi.sco distortion.wav
+  ```
+  Los parámetros del efecto en este ejemplo han sido un umbral `t=0.75` y una ventana de `tm=0.01` s para el clipping estándar y `tm=0.0000001` para el soft-clipping.
+  Las tres señales generadas se encuentran en `work/ejemplos`. La score usada ha sido `doremi.sco`, donde hay distorsión en todas las notas menos en la penúltima.
+
 
 ### Síntesis FM.
 

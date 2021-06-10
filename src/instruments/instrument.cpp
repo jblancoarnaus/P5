@@ -1,6 +1,8 @@
 #include <iostream>
 #include "instrument_dumb.h"
 #include "seno.h"
+#include "seno_fm.h"
+#include "seno_vibrato.h"
 #include "percussion.h"
 #include "percussion_pitch.h"
 #include "percussion_sample.h"
@@ -26,6 +28,12 @@ namespace upc {
     }
     if (name == "Seno") {
       pInst = (Instrument *) new Seno(parameters);
+    }
+    if (name == "SenoFM") {
+      pInst = (Instrument *) new SenoFM(parameters);
+    }
+    if (name == "SenoVibrato") {
+      pInst = (Instrument *) new SenoVibrato(parameters);
     }
     if (name == "Percussion") {
       pInst = (Instrument *) new Percussion(parameters);

@@ -90,31 +90,33 @@ const vector<float> &Seno::synthesize()
   }
   else if (not bActive)
     return x;
-  unsigned int index_floor, next_index;
-  float weight;
+  unsigned int index_floor, next_index; //interpolation indexes
+  float weight;   //interpolation weights
   for (unsigned int i = 0; i < x.size(); ++i)
   {
+    //check if the floating point index is out of bounds
+   if (floor(index) > tbl.size()-1)
+      index = index-floor(index);
 
-    //Obtain the index according to the step
+    //Obtain the index as an integer
+    index_floor = floor(index);
+    weight = index - index_floor;
 
-    index_floor = floor(index * index_step);
-    weight = index * index_step - index_floor;
-    //fix second index if needed
-    if (index_floor >= (unsigned int)N)
+    //fix interpolation indexes if needed
+    if (index_floor == (unsigned int)N-1)
     {
       next_index = 0;
-      index_floor = N;
+      index_floor = N-1;
     }
     else
     {
       next_index = index_floor + 1;
     }
-    if (index_floor >= tbl.size())
-      index = index_floor - tbl.size();
-
+    //interpolate table values
     x[i] = A * ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
 
-    index++;
+    //update real index
+    index = index + index_step;
   }
   adsr(x); //apply envelope to x and update internal status of ADSR
 

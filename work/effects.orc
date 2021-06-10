@@ -1,2 +1,2 @@
-13 Distortion tm=0.01; t=0.75;
+13 Vibrato I=0; fm=2000;
 
