@@ -273,6 +273,42 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
 
   #### Vibrato
 
+  Para el vibrato, con la finalidad de tener notas de frecuencias más altas para poder ver mejor lo que pasa en las gráficas, hemos usado una nota de 90 semitonos (466.16 Hz)
+
+  Para ver sus efectos, primero hemos visto qué pasaba en frecuencia con valores bajos de `I`, propios de un vibrato (`I==0.25`):
+
+   <p align="center">
+   <img src="img/vibrato_freq_graph1.png" width="460" align="center">
+   </p
+  
+  Como se puede ver, vemos un pico en la frecuencia del tono principal y una pequeña distorsión en valores ± `fm` (500 Hz). Es decir, el parámetro `fm` es el que decidirá dónde y cada cuando aparecen armónicos respecto la frecuencia central. 
+
+  Aumentando la extensión del vibrato `I`, los picos que se generan en los armónicos (múltiplos de fm desde la frecuencia central) van ganando importancia. En este ejemplo, podemos incluso estimar las frecuencias `fc` y  `fm` a partir de los índices dónde se encuentran los picos máximos de la transformada:
+
+   <p align="center">
+   <img src="img/vibrato_freq_graph2.png" width="460" align="center">
+   </p
+  
+  Tras comparar diferentes valores de `I`, vemos que tiene una relación bastante directa con la amplitud de los armónicos respecto la frecuencia fundamental:
+
+   <p align="center">
+   <img src="img/vibrato_freq_graph3.png" width="600" align="center">
+   </p
+  
+  Si hacemos zoom, vemos que a medida que I aumenta, la frecuencia fundamental pierde peso, ya que se va repartiendo en los armónicos:
+
+   <p align="center">
+   <img src="img/vibrato_freq_graph3_zoom.png" width="340" align="center">
+   </p
+
+  Por otro lado, la variación de `I` también se ve reflejada en la señal temporal. A medida que aumenta, la distorsión introducida por estos armónicos se vuelve más perceptible:
+
+   <p align="center">
+   <img src="img/vibrato_time_graph1.png" width="540" align="center">
+   </p
+
+  El código para obtener las gráficas en tiempo y frecuencia se encuentra en `scripts/time_vibrato_graph.py` y `scripts/freq_vibrato_graph.py` respectivamente
+
 - Si ha generado algún efecto por su cuenta, explique en qué consiste, cómo lo ha implementado y qué
   resultado ha producido. Incluya, en el directorio `work/ejemplos`, los ficheros necesarios para apreciar
   el efecto, e indique, a continuación, la orden necesaria para generar los ficheros de audio usando el

@@ -1,2 +1,2 @@
-13 Vibrato I=0; fm=2000;
+13 Vibrato I=5; fm=500;
 
