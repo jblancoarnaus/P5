@@ -28,7 +28,7 @@ PercussionPitch::PercussionPitch(const std::string &param)
     adsr_a = 0.01; //default value
   if (!kv.to_float("ADSR_D", adsr_d))
     adsr_d = 0.01; //default value
-  if (!kv.to_float("decay", adsr_d))
+  if (!kv.to_float("decay", decay_constant))
     decay_constant = 0.99935; //default value
 
   total_attack_length = round((adsr_d + adsr_a) * (float)SamplingRate);

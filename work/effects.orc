@@ -1,2 +1,2 @@
-13 Vibrato I=5; fm=500;
+#13 Distortion t=0.75; tm=0.0000001;
 

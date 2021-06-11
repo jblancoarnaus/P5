@@ -96,6 +96,17 @@ mediante búsqueda de los valores en una tabla.
 - Incluya, a continuación, el código del fichero `seno.cpp` con los métodos de la clase Seno.
 
 ```cpp
+#include <iostream>
+#include <math.h>
+#include "seno.h"
+#include "keyvalue.h"
+#include "wavfile_mono.h"
+
+#include <stdlib.h>
+
+using namespace upc;
+using namespace std;
+
 Seno::Seno(const std::string &param)
     : adsr(SamplingRate, param)
 {
@@ -117,19 +128,29 @@ Seno::Seno(const std::string &param)
   int error = 0;
   if ((file_name = kv("file")) == kv_null)
   {
-    cerr << "Error: no se ha encontrado el campo con el fichero de la señal para un instrumento FicTabla" << endl;
-    throw -1;
+    cerr << "Error: no se ha encontrado el campo con el fichero de la señal para un instrumento FicTabla.\nUsando sinusoide por defecto..." << endl;
+    //Create a tbl with one period of a sinusoidal wave
+    tbl.resize(N);
+    float phase = 0, step = 2 * M_PI / (float)N;
+    index = 0;
+    for (int i = 0; i < N; ++i)
+    {
+      tbl[i] = sin(phase);
+      phase += step;
+    }
   }
-
-  unsigned int fm;
-  error = readwav_mono(file_name, fm, tbl);
-  if (error < 0)
+  else
   {
-    cerr << "Error: no se puede leer el fichero " << file_name << " para un instrumento FicTabla" << endl;
+    unsigned int fm;
+    error = readwav_mono(file_name, fm, tbl);
+    if (error < 0)
+    {
+      cerr << "Error: no se puede leer el fichero " << file_name << " para un instrumento FicTabla" << endl;
 
-    throw -1;
+      throw -1;
+    }
+    N = tbl.size();
   }
-  N = tbl.size();
 }
 
 void Seno::command(long cmd, long note, long vel)
@@ -139,7 +160,7 @@ void Seno::command(long cmd, long note, long vel)
     bActive = true;
     adsr.start();
     index = 0;
-    float f0note = pow(2, ((float)note - 69) / 12) * 440; //convert note from semitones to frequency (Hz)
+    float f0note = pow(2, ((float)note - 69) / 12) * 440; //convert note in semitones to frequency (Hz)
     float Nnote = 1 / f0note * SamplingRate;              //obtain note period in samples
     index_step = (float)N / Nnote;                        //obtain step (relationship between table period and note period)
     if (vel > 127)
@@ -167,29 +188,33 @@ const vector<float> &Seno::synthesize()
   }
   else if (not bActive)
     return x;
-  unsigned int index_floor, next_index;
-  float weight;
+  unsigned int index_floor, next_index; //interpolation indexes
+  float weight;   //interpolation weights
   for (unsigned int i = 0; i < x.size(); ++i)
   {
-    //Obtain the index according to the step
-    index_floor = floor(index * index_step);
-    weight = weight - index_floor;
-    //fix second index if needed
-    if (index_floor >= (unsigned int)N)
+    //check if the floating point index is out of bounds
+   if (floor(index) > tbl.size()-1)
+      index = index-floor(index);
+
+    //Obtain the index as an integer
+    index_floor = floor(index);
+    weight = index - index_floor;
+
+    //fix interpolation indexes if needed
+    if (index_floor == (unsigned int)N-1)
     {
       next_index = 0;
-      index_floor = N;
+      index_floor = N-1;
     }
     else
     {
       next_index = index_floor + 1;
     }
-    if (index_floor >= tbl.size())
-      index = index_floor - tbl.size();
-    
+    //interpolate table values
     x[i] = A * ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
-  
-    index++;
+
+    //update real index
+    index = index + index_step;
   }
   adsr(x); //apply envelope to x and update internal status of ADSR
 
@@ -242,7 +267,7 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
   }
   ```
 
-  Este es el único caso en que la reproducción nunca se interrumpe o acaba independientemente de los comandos en los *scores*. El envolvente ADSR tampoco tiene ningún efecto sobre la grabación.
+  Este es el único caso en que la reproducción nunca se interrumpe o acaba independientemente de los comandos en los *scores*. Ni el pitch ni el envolvente ADSR tienen ningún efecto sobre la grabación.
   
   El resto de métodos ``command()`` siguen manteniendo los casos específicos según se recibe ``cmd == 8`` o ``cmd == 0``.
 
@@ -301,7 +326,7 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
    <img src="img/vibrato_freq_graph3_zoom.png" width="340" align="center">
    </p
 
-  Por otro lado, la variación de `I` también se ve reflejada en la señal temporal. A medida que aumenta, la distorsión introducida por estos armónicos se vuelve más perceptible:
+  Por otro lado, la variación de `I` también se ve reflejada en la señal temporal. A medida que aumenta, la distorsión introducida por estos armónicos se vuelve más perceptible. Concretamente, los ciclos de la sinusoide principal varían más los unos respecto los otros:
 
    <p align="center">
    <img src="img/vibrato_time_graph1.png" width="540" align="center">

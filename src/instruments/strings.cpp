@@ -22,9 +22,15 @@ Strings::Strings(const std::string &param)
   KeyValue kv(param);
   if (!kv.to_int("N", N))
     N = 40; //default value
+  if (!kv.to_float("ADSR_A", adsr_a))
+    adsr_a = 0.01; //default value
+  if (!kv.to_float("ADSR_S", adsr_s))
+    adsr_s = 0.5; //default value
+  if (!kv.to_float("ADSR_R", adsr_r))
+    adsr_r = 0.1; //default value
 
+  adsr.set(adsr_s, adsr_a, 0, adsr_r, 1);
   index = 0;
-
   std::string file_name;
   static string kv_null;
   int error = 0;
@@ -91,22 +97,22 @@ const vector<float> &Strings::synthesize()
   else if (not bActive)
     return x;
   unsigned int index_floor, next_index; //interpolation indexes
-  float weight;   //interpolation weights
+  float weight;                         //interpolation weights
   for (unsigned int i = 0; i < x.size(); ++i)
   {
     //check if the floating point index is out of bounds
-   if (floor(index) > tbl.size()-1)
-      index = index-floor(index);
+    if (floor(index) > tbl.size() - 1)
+      index = index - floor(index);
 
     //Obtain the index as an integer
     index_floor = floor(index);
     weight = index - index_floor;
 
     //fix interpolation indexes if needed
-    if (index_floor == (unsigned int)N-1)
+    if (index_floor == (unsigned int)N - 1)
     {
       next_index = 0;
-      index_floor = N-1;
+      index_floor = N - 1;
     }
     else
     {
@@ -115,6 +121,10 @@ const vector<float> &Strings::synthesize()
     //interpolate table values
     x[i] = A * ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
 
+    if (adsr.active())
+    {
+      x[i] = x[i] * adsr_s;
+    }
     //update real index
     index = index + index_step;
   }

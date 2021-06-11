@@ -11,7 +11,7 @@ namespace upc {
     EnvelopeADSR adsr;
     float index;
     int N;
-	float A, index_step;
+	float A, index_step, adsr_a, adsr_s, adsr_r;
     std::vector<float> tbl;
   public:
     Strings(const std::string &param = "");
