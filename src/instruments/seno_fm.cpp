@@ -29,12 +29,12 @@ SenoFM::SenoFM(const std::string &param)
   if (!kv.to_float("I", I))
     I = 1; //default downward variation shift in semitones
   // Pass I in semitones to linear I
-  I = 1. - pow(2, -I / 12.);
+    //I = 1. - pow(2, -I / 12.);
 
   if (!kv.to_float("N1", N1))
-    N1 = 10; //default value
+    N1 = 3; //default value
   if (!kv.to_float("N2", N2))
-    N2 = 10; //default value
+    N2 = 2; //default value
 
   fase_sen = 0;
   fase_mod = 0;
@@ -74,8 +74,8 @@ SenoFM::SenoFM(const std::string &param)
 
 void SenoFM::command(long cmd, long note, long vel)
 {
-  if (cmd == 9)
-  { //'Key' pressed: attack begins
+  if (cmd == 9){ 
+    //'Key' pressed: attack begins
     bActive = true;
     adsr.start();
     index = 0;
@@ -86,8 +86,7 @@ void SenoFM::command(long cmd, long note, long vel)
     fm = f0note*N2/N1;
     inc_fase_mod = 2 * M_PI * fm / SamplingRate;
 
-    if (vel > 127)
-      vel = 127;
+    if (vel > 127) vel = 127;
 
     A = vel / 127.;
   }
@@ -123,9 +122,11 @@ const vector<float> &SenoFM::synthesize()
   for (unsigned int i = 0; i < x.size(); ++i)
   {
     //check if the floating point index is out of bounds
-   if (floor(index) > tbl.size()-1)
-      index = index-floor(index);
-
+   if (floor(index) > tbl.size()-1){
+     index = index-floor(index);
+      
+   }
+      
     //Obtain the index as an integer
     index_floor = floor(index);
     weight = index - index_floor;
@@ -142,6 +143,8 @@ const vector<float> &SenoFM::synthesize()
     }
     //interpolate table values
     x[i] = A * ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
+    x[i] = A*tbl[round(index_step*index)];
+    
 
     //update real index
     index = index + index_step;
