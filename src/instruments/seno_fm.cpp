@@ -73,7 +73,6 @@ SenoFM::SenoFM(const std::string &param)
   if (!kv.to_float("setting", setting))
     setting = 0; //default setting (standard adsr == 0, exp >0, string adsr ==-1)
 
-
   adsr2.set(adsr_a2, adsr_d2, adsr_s2, adsr_r2, 1.5F);
 
   if (setting == -1)
@@ -118,8 +117,8 @@ SenoFM::SenoFM(const std::string &param)
 
 void SenoFM::command(long cmd, long note, long vel)
 {
-  if (cmd == 9){ 
-    //'Key' pressed: attack begins
+  if (cmd == 9)
+  { //'Key' pressed: attack begins
     bActive = true;
     adsr.start();
     adsr2.start();
@@ -137,7 +136,8 @@ void SenoFM::command(long cmd, long note, long vel)
     fm = f0note * N2 / N1;                         //modulating frequency
     mod_phase_step = 2 * M_PI * fm / SamplingRate; //step of the modulating sine I*sin(2*pi*fm/SamplingRate)
 
-    if (vel > 127) vel = 127;
+    if (vel > 127)
+      vel = 127;
 
     A = vel / 127.;
   }
@@ -200,10 +200,8 @@ const vector<float> &SenoFM::synthesize()
   {
 
     //check if the floating point index is out of bounds
-
     if ((long unsigned int)floor(index) > tbl.size() - 1)
       index = index - floor(index);
-
 
     //Obtain the index as an integer
     index_floor = (int)floor(index);
