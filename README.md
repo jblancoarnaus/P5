@@ -68,7 +68,7 @@ En el caso de que se produzca una interrupción (la tecla deja de ser pulsada), 
 ```cpp
 if (gotInterrupted)
 {
-  x[i] = x[i] * pow(0.99935, (int)interrupted_count);
+  x[i] = x[i] * pow(decay_constant, (int)interrupted_count);
   interrupted_count++;
 }
 ```
@@ -323,7 +323,7 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
   Si hacemos zoom, vemos que a medida que I aumenta, la frecuencia fundamental pierde peso, ya que se va repartiendo en los armónicos:
 
    <p align="center">
-   <img src="img/vibrato_freq_graph3_zoom.png" width="340" align="center">
+   <img src="img/vibrato_freq_graph3_zoom.png" width="500" align="center">
    </p
 
   Por otro lado, la variación de `I` también se ve reflejada en la señal temporal. A medida que aumenta, la distorsión introducida por estos armónicos se vuelve más perceptible. Concretamente, los ciclos de la sinusoide principal varían más los unos respecto los otros:
@@ -421,6 +421,17 @@ deberá venir expresado en semitonos.
 
 - Use el instrumento para generar un vibrato de *parámetros razonables* e incluya una gráfica en la que se
   vea, claramente, la correspondencia entre los valores `N1`, `N2` e `I` con la señal obtenida.
+
+     <p align="center">
+   <img src="img/fm_freq_graph1.png" width="640" align="center">
+   </p
+
+afdsa
+
+      <p align="center">
+   <img src="img/fm_time_graph1.png" width="540" align="center">
+   </p
+
 - Use el instrumento para generar un sonido tipo clarinete y otro tipo campana. Tome los parámetros del
   sonido (N1, N2 e I) y de la envolvente ADSR del citado artículo. Con estos sonidos, genere sendas escalas
   diatónicas (fichero `doremi.sco`) y ponga el resultado en los ficheros `work/doremi/clarinete.wav` y

@@ -27,7 +27,7 @@ for(int i=0;i<dir.length();i++)
   //printf("\nchannesl %d\n",sf_info.channels);
   if (sndfile_in == 0) //Error opening input file
     return -1;
-printf("channesl %d\n",sf_info.channels);
+//printf("channesl %d\n",sf_info.channels);
   if (sf_info.channels  != 1) //Only mono files supported!
     return -2;
 

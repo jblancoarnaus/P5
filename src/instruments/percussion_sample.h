@@ -11,7 +11,7 @@ namespace upc {
     EnvelopeADSR adsr;
     unsigned int index;
     int N;
-	float A;
+	float A, volume;
     std::vector<float> tbl;
   public:
     PercussionSample(const std::string &param = "");

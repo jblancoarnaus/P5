@@ -23,6 +23,9 @@ PercussionSample::PercussionSample(const std::string &param)
   KeyValue kv(param);
   if (!kv.to_int("N", N))
     N = 40; //default value
+    
+  if (!kv.to_float("volume", volume))
+    volume = 1; //default value
 
   std::string file_name;
   static string kv_null;
@@ -43,7 +46,6 @@ PercussionSample::PercussionSample(const std::string &param)
     throw -1;
   }
   N = tbl.size();
-
 }
 
 void PercussionSample::command(long cmd, long note, long vel)
@@ -61,7 +63,6 @@ void PercussionSample::command(long cmd, long note, long vel)
 const vector<float> &PercussionSample::synthesize()
 {
 
-
   if (not bActive)
     return x;
 
@@ -70,14 +71,15 @@ const vector<float> &PercussionSample::synthesize()
 
     if (index < (unsigned int)N)
     {
-      x[i] = A * tbl[index++];
+      x[i] = volume * A * tbl[index++];
     }
     else //fill signal with 0 if the sound has been fully played
     {
-      for(long unsigned int j=i;j<x.size();j++){
+      for (long unsigned int j = i; j < x.size(); j++)
+      {
         x[j] = 0;
       }
-      bActive=false;
+      bActive = false;
     }
   }
 

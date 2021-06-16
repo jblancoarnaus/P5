@@ -29,7 +29,7 @@ Strings::Strings(const std::string &param)
   if (!kv.to_float("ADSR_R", adsr_r))
     adsr_r = 0.1; //default value
 
-  adsr.set(adsr_s, adsr_a, 0, adsr_r, 1);
+  adsr.set(adsr_s, adsr_a, 0, adsr_r, 1.5F);
   index = 0;
   std::string file_name;
   static string kv_null;
@@ -82,7 +82,10 @@ void Strings::command(long cmd, long note, long vel)
   }
   else if (cmd == 0)
   { //Sound extinguished without waiting for release to end
-    adsr.end();
+  
+  adsr.set(adsr_s, adsr_a, 0, adsr_r/4, 1.5F);
+  adsr.stop();
+   // adsr.end();
   }
 }
 

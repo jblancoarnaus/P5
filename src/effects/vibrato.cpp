@@ -17,6 +17,7 @@ Vibrato::Vibrato(const std::string &param) {
   // In this way, we prevent negative shifts
   if (!kv.to_float("I", I))
     I = 1; //default downward variation shift in semitones
+	
   // Pass I in semitones to linear I
   I = 1. - pow(2, -I / 12.);
 
@@ -35,6 +36,7 @@ void Vibrato::command(unsigned int cmd) {
 }
 
 void Vibrato::operator()(std::vector<float> &x){
+	
 	std::vector<float> xout(x.size());
 	unsigned int tot = 0;
 	float	xant, xpos, rho;
