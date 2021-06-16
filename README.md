@@ -57,7 +57,7 @@ El código usado para representar todas las gráficas de este apartado se encuen
 
 El instrumento creado con estas características ha sido ``Percussion``, que luego se ha adaptado para tener el pitch adecuado según la nota que se toque (``PercussionPitch``) o bien si se usan *samples*, caso en el que siempre se reproduce el sonido completo sin alteración de pitch (``PercussionSample``)
 
-Su envolvente cuando termina el sonido sin ser interrumpido es la siguiente:
+Su envolvente termina cuando  el sonido sin ser interrumpido es la siguiente:
 
 <p align="center">
 <img src="img/adsr_graph2.png" width="540" align="center">
@@ -221,7 +221,7 @@ const vector<float> &Seno::synthesize()
   return x;
 }
 ```
-Como se puede ver en el código, hemos añadido interpolación lineal para los puntos que no se encontraran en la tabla. Interpolando ahora tenemos la opción de tener en cuenta cómo tratamos el *'reseteo'* del índice a medida que iteramos. En primer lugar, habíamos forzado que el índice, ya tomando valores decimales, fuese forzado a 0 cuando se saliera de la tabla. De este modo, aparece un pequeño desencaje en la sinusoide generada, ya que el valor 0 no es necesariamente la fase que le corresponde (en la gráfica se puede ver como uno de los escalones se repite). Luego, hemos optado resetear el índice con el valor correspondiente (índice actual - N), que posiblemente será 0 con algunos decimales. Esto permite que la fase avance y no se *'resetee'* cada vez que termina de leer la tabla, lo cual produce resultados bastante diferentes en cuanto al sonido.
+Tal y como podemos observar en el código, hemos añadido una interpolación lineal para los puntos que no se encuentran en la tabla.Con la interpolación tenemos la opción de tener en cuenta cómo tratamos el *'reseteo'* del índice a medida que iteramos.En primer lugar, habíamos forzado que el índice (tomando valores decimales) fuese forzado a 0 cuando se saliera de la tabla. De este modo, aparece un pequeño desencaje en la sinusoide generada porque el valor 0 no es necesariamente la fase que le corresponde (en la gráfica se puede ver como uno de los escalones se repite). Luego, hemos optado resetear el índice con el valor correspondiente (índice actual - N), que posiblemente será 0 con algunos decimales. Esto permite que la fase avance y no se *'resetee'* cada vez que termina de leer la tabla, lo cual produce resultados bastante diferentes en cuanto al sonido. 
 
 <p align="center">
 <img src="img/seno_graph1.png" width="540" align="center">
@@ -233,7 +233,7 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
   e incluya una gráfica en la que se vean claramente (use pelotitas en lugar de líneas) los valores de la
   tabla y los de la señal generada.
   
-  Para obtener los valores de la señal se ha usado una interpolación lineal. Para implementarla, primero obtenemos el entero más cercano a la baja ``index_floor``. Haciendo esto en vez de un ``round``, nos podemos asegurar que siempre estaremos en el mismo caso (el valor almacenado en index_floor será la primera posición entre las que interpolar) y así obtener ``next_index`` sumándole 1. La ponderación para los valores con cada uno de los índices se hace con ``weight``, variable que es la diferencia entre el índice *real* y el entero inferior más próximo, y, a su vez, contiene la información de "como de cerca" están cada una de las dos posiciones, lo cual nos sirve para darle más o menos peso. 
+  Para obtener los valores de la señal se ha usado una interpolación lineal. Para implementarla, primero obtenemos el entero más cercano a la baja ``index_floor``. Haciendo esto en vez de un ``round``, nos podemos asegurar que siempre estaremos en el mismo caso (el valor almacenado en index_floor será la primera posición entre las que interpolar) y así obtener ``next_index`` sumándole 1. La ponderación para los valores con cada uno de los índices se hace con ``weight``, variable que es la diferencia entre el índice *real* y el entero inferior más próximo, y, a su vez, contiene la información de "cómo de cerca" están cada una de las dos posiciones, lo cual nos sirve para darle más o menos peso. 
 
   ```cpp 
   //Obtain the index according to the step
@@ -306,7 +306,7 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
    <img src="img/vibrato_freq_graph1.png" width="460" align="center">
    </p
   
-  Como se puede ver, vemos un pico en la frecuencia del tono principal y una pequeña distorsión en valores ± `fm` (500 Hz). Es decir, el parámetro `fm` es el que decidirá dónde y cada cuando aparecen armónicos respecto la frecuencia central. 
+  Como se puede ver, vemos un pico en la frecuencia del tono principal. También una pequeña distorsión en valores ± `fm` (500 Hz). Es decir, el parámetro `fm` es el que decidirá dónde y cada cuando aparecen armónicos respecto la frecuencia central. 
 
   Aumentando la extensión del vibrato `I`, los picos que se generan en los armónicos (múltiplos de fm desde la frecuencia central) van ganando importancia. En este ejemplo, podemos incluso estimar las frecuencias `fc` y  `fm` a partir de los índices dónde se encuentran los picos máximos de la transformada:
 
@@ -339,11 +339,11 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
   el efecto, e indique, a continuación, la orden necesaria para generar los ficheros de audio usando el
   programa `synth`.
 
-  El efecto que hemos implementado ha sido la *distorsión*, que consiste saturar la salida por encima de un umbral concreto (*clipping*), lo que, tal como dice el nombre, genera una distorsión audible.
+  El efecto que hemos implementado ha sido la *distorsión*. Consiste en saturar la salida por encima de un umbral concreto (*clipping*), lo que, tal como dice el nombre, genera una distorsión audible.
 
   Para implementarlo, considerando que nuestras señales tienen amplitudes variables (envolvente ADSR), hemos usado una ventana deslizante para que el clipping se realizara de forma local. 
 
-  Los parámetros de entrada desde el fichero `effects` un umbral `t`, que es el porcentaje de la amplitud respecto el cual se hará el clipping, y un tiempo `tm`, que es la duración de la ventana en segundos. Teniendo estos valores en cuenta, se calculan los valores mínimos y máximos de la ventana y se recorta la señal respecto ellos:
+  Los parámetros de entrada desde el fichero `effects` un umbral `t`. Es el porcentaje de la amplitud respecto el que se hará el clipping. También, un tiempo `tm`, que es la duración de la ventana en segundos. Teniendo estos valores en cuenta, se calculan los valores mínimos y máximos de la ventana y se recorta la señal respecto ellos, tal y como podemos ver infra:
 
   ```cpp
 	void Distortion::operator()(std::vector<float> &x)
@@ -397,7 +397,7 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
 	}
   ```
 
-  Dado a como está implementado, se obtienen mejores resultados con frecuencias altas, ya que garantizan que el máximo de la sinusoide se encuentre en la ventana escogida. Además, en el caso particular de usar `tm`s pequeñas, podemos obtener un *clipping* más suave, que se percibe como una disminución de volumen:
+  Dado la implementación, se obtienen mejores resultados con frecuencias altas. Se garantiza que el máximo de la sinusoide se encuentre en la ventana escogida. Además, en el caso particular de usar `tm`s pequeñas, podemos obtener un *clipping* más suave, que se percibe como una disminución de volumen:
 
    <p align="center">
    <img src="img/distortion_graph.png" width="540" align="center">
