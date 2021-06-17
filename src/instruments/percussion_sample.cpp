@@ -23,9 +23,12 @@ PercussionSample::PercussionSample(const std::string &param)
   KeyValue kv(param);
   if (!kv.to_int("N", N))
     N = 40; //default value
-    
+
   if (!kv.to_float("volume", volume))
     volume = 1; //default value
+
+      if (!kv.to_int("interrupt", interrupt))
+    interrupt = 0; //dont interrupt by default value
 
   std::string file_name;
   static string kv_null;
@@ -54,6 +57,9 @@ void PercussionSample::command(long cmd, long note, long vel)
   { //'Key' pressed: attack begins
     bActive = true;
     index = 0;
+    total_samples_played = 0;
+    gotInterrupted = false; //reset status for every new note
+    interrupted_count = 0;
     if (vel > 127)
       vel = 127;
     A = vel / 127.;
@@ -72,6 +78,17 @@ const vector<float> &PercussionSample::synthesize()
     if (index < (unsigned int)N)
     {
       x[i] = volume * A * tbl[index++];
+
+      if (total_samples_played != -1)
+      {
+        total_samples_played++;
+      }
+
+      if (gotInterrupted&&interrupt!=0)
+      {
+        x[i] = x[i] * pow(interrupt, (int)interrupted_count);
+        interrupted_count++;
+      }
     }
     else //fill signal with 0 if the sound has been fully played
     {

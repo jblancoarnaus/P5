@@ -23,9 +23,6 @@ SenoFM::SenoFM(const std::string &param)
   if (!kv.to_int("N", N))
     N = 40; //default value
 
-  // I is the maximum downward pitch shift in semitones
-  // As the shift is sinusoidal, the maximum posible shift is 2 (one octave)
-  // In this way, we prevent negative shifts
   if (!kv.to_float("I", I))
     I = 1; //Modulation index
 
@@ -42,7 +39,6 @@ SenoFM::SenoFM(const std::string &param)
   if (!kv.to_float("ADSR_R", adsr_r))
     adsr_r = 0.1; //"Release" adsr parameter
 
-
   //modulation index adsr
   if (!kv.to_float("ADSR_A2", adsr_a2))
     adsr_a2 = adsr_a; //"Attack" adsr parameter
@@ -56,7 +52,6 @@ SenoFM::SenoFM(const std::string &param)
   if (!kv.to_float("ADSR_R2", adsr_r2))
     adsr_r2 = adsr_r; //"Release" adsr parameter
 
-
   if (!kv.to_float("max_level", max_level))
     max_level = 0.02; //maximum level of the signal
 
@@ -67,9 +62,9 @@ SenoFM::SenoFM(const std::string &param)
     I2 = 1; //modulation index 2
 
   if (!kv.to_float("N1", N1))
-    N1 = 1; //default value
+    N1 = 1; //default N1 value
   if (!kv.to_float("N2", N2))
-    N2 = 1; //default value
+    N2 = 1; //default N2 value
   if (!kv.to_float("setting", setting))
     setting = 0; //default setting (standard adsr == 0, exp >0, string adsr ==-1)
 
@@ -90,8 +85,7 @@ SenoFM::SenoFM(const std::string &param)
   int error = 0;
   if ((file_name = kv("file")) == kv_null)
   {
-    //cerr << "Error: no se ha encontrado el campo con el fichero de la señal para un instrumento FicTabla.\nUsando sinusoide por defecto..." << endl;
-    //Create a tbl with one period of a sinusoidal wave if there's no input file
+   //Create a tbl with one period of a sinusoidal wave if there's no input file
     tbl.resize(N);
     float phase = 0, step = 2 * M_PI / (float)N;
     index = 0;
@@ -147,13 +141,12 @@ void SenoFM::command(long cmd, long note, long vel)
     adsr2.stop();
   }
   else if (cmd == 0)
-  { //Sound extinguished without waiting for release to end
-
+  { 
+  //faster release, but don't end it abruptly
     adsr.set(adsr_s, adsr_a, adsr_d, adsr_r / 4, 1.5F);
     adsr.stop();
     adsr2.set(adsr_s2, adsr_a2, adsr_d2, adsr_r2 / 4, 1.5F);
     adsr2.stop();
-    //adsr.end();
   }
 }
 
@@ -191,9 +184,7 @@ const vector<float> &SenoFM::synthesize()
   for (unsigned int i = 0; i < x.size(); i++)
   {
     I_array[i] = I1 + I_array[i];
-    //printf("%f\n",I_array[i]);
   }
-  //printf("OK2");
 
   //fill x_tm with a period of the new signal
   for (unsigned int i = 0; i < (unsigned int)note_int; ++i)
@@ -218,95 +209,29 @@ const vector<float> &SenoFM::synthesize()
       next_index = index_floor + 1;
     }
     //interpolate table values
-    //printf("i %d xsize %ld\n",i,x.size());
-    if (i < x.size())
-      x[i] = A * ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
 
     x_tm[i] = ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
-    // printf("%f\n",x_tm[i]);
     //update real index
     index = index + index_step;
   }
 
-  // Usamos resta en la modulación para garantizar que no nos quedaremos sin
-  // muestras en el vector x: fase_sen += 1 - I * sin(fase_mod).
-  //
-  // En el fondo, esta trampa permite garantizar que el sistema es siempre causal...
-  /*
-    unsigned int tot = 0;
-  float xant, xpos, rho;
- // Si el buffer no está vacío tomamos los valores de él hasta vaciarlo (o no).
-	for (tot = 0; fase_sen < buffer.size() and tot < x.size(); tot++) {
-		xant = buffer[(int) fase_sen];
-		xpos = ((unsigned int) fase_sen < buffer.size() - 1 ? buffer[(int) fase_sen + 1] : x[0]);
-		rho = fase_sen - (int) fase_sen;
-
-		xout[tot] = xant + rho * (xpos - xant);
-
-		fase_sen += 1 - I * sin(fase_mod);
-		fase_mod += inc_fase_mod;
-	}
-	if (fase_sen > buffer.size()) {
-		fase_sen -= buffer.size();
-		buffer.resize(0);
-	}
-	else {
-		buffer.erase(buffer.begin(), buffer.begin() + (int) fase_sen);
-		fase_sen -= (int) fase_sen;
-	}
-
-	// Completamos la señal con muestras del vector actual
-	while (tot < x.size()) {
-		// Si podemos, interpolamos; si no, extrapolamos
-		if (fase_sen < x.size() - 1) {
-			xant = x[(int) fase_sen];
-			xpos = x[(int) fase_sen + 1];
-			rho = fase_sen - (int) fase_sen;
-		}
-		else {
-			xant = x[(int) fase_sen - 1];
-			xpos = x[(int) fase_sen];
-			rho = fase_sen - (int) fase_sen + 1;
-		}
-		xout[tot] = xant + rho * (xpos - xant);
-
-		if (++tot < x.size()) {
-			fase_sen += 1 - I * sin(fase_mod);
-			fase_mod += inc_fase_mod;
-		}
-	}
-
-	// Guardamos los valores restantes de x en el buffer
-	buffer.insert(buffer.end(), x.begin() + (int) fase_sen, x.end());
-	fase_sen -= (int) fase_sen;
-
-	while (fase_mod > M_PI) fase_mod -= 2 * M_PI;
-
-	// Copimos los valores de xout en x
-	x = xout;*/
-  //printf("OK 2eq23q2e\n");
   //modulate the signal
   for (unsigned int i = 0; i < x.size(); ++i)
   {
-    // printf("LOOP BEGINS\n\nindex sen %f note int %d floor(index_sen) %d\n", index_sen, note_int, (int)floor(index_sen));
-
     //check if the floating point index is out of bounds
     if (index_sen < 0)
     {
-      // printf("\n\n ENTRA IF1 *******************\n\n");
       index_sen = Nnote + index_sen;
     }
     if ((int)floor(index_sen) > note_int - 1)
     {
 
-      // printf("\n\n ENTRA IF2 *******************\n\n");
       index_sen = index_sen - (note_int - 1);
     }
-    //printf("fixed index_sen %f\n", index_sen);
     //Obtain the index as an integer
     index_floor_fm = floor(index_sen);
     weight_fm = index_sen - index_floor_fm;
-    //printf("index_floor_fm %d weight %f\n", index_floor_fm, weight_fm);
+
     //fix interpolation indexes if needed
     if (index_floor_fm == note_int - 1)
     {
@@ -318,21 +243,15 @@ const vector<float> &SenoFM::synthesize()
       next_index_fm = index_floor_fm + 1;
     }
     //interpolate table values
-    //printf("fixed index_floor_fm %d next:index_fm %d\n", index_floor_fm, next_index_fm);
     x[i] = A * ((1 - weight_fm) * x_tm[index_floor_fm] + weight_fm * (x_tm[next_index_fm]));
-    //printf("index floor %d next index %d fase sen %f x[i] %f i %d sizex %ld\n", index_floor_fm, next_index_fm, index_sen, x[i],i,x.size());
-    //x[i] = A * ((1 - weight) * tbl[index_floor_fm] + (weight)*tbl[next_index_fm]);
 
     //update real index (phase) and modulated phase
     index_sen = index_sen + 1 - I_array[i] * sin(mod_phase);
     mod_phase = mod_phase + mod_phase_step;
-
-    // printf("x[i] updated %f index_sen %f updated mod_phase %Lf", x[i], index_sen, mod_phase);
   }
 
   while (mod_phase > M_PI)
     mod_phase -= 2 * M_PI;
-  //printf("DONE\n");
 
   //apply exponential or adsr envelope
 
@@ -355,8 +274,5 @@ const vector<float> &SenoFM::synthesize()
   }
   if (setting <= 0)
     adsr(x); //apply envelope to x and update internal status of ADSR
-  //for (unsigned int i = 0; i < Nnote; ++i)
-  //  printf("val %f i\n", x_tm[i]);
-  //printf("\n ASDR\n");
   return x;
 }

@@ -1,37 +1,40 @@
 # 2: synth keyboard ~ soft bell (lead)
-2	SenoFM    max_level=0.00825; I1=0;I2=1;N1=1;N2=12;setting=0.999875;   #exp envelope setting
+2	SenoFM    max_level=0.01825; I1=0;I2=1;N1=1;N2=12;setting=0.999875;   #exp envelope setting
 
 # 3: synth woodwind
-3	SenoFM	ADSR_A=0.02; ADSR_D=0.05; ADSR_S=0.3; ADSR_R=0.55; ADSR_S2=1; max_level=0.00875; N=40; I=1; I1=0; I2=2; N2=3; N1=1; setting=0; setting2=-1;
+3	SenoFM	ADSR_A=0.02; ADSR_D=0.05; ADSR_S=0.3; ADSR_R=0.55; ADSR_S2=1; max_level=0.01865; N=40; I=1; I1=0; I2=2; N2=3; N1=1; setting=0; setting2=-1;
 
 # 4: santoor (piano-ish lead around 1:12)
-4	SenoFM	max_level=0.0195;I1=1;I2=3.75;N1=4;N2=12;setting=0.99983; file=tables/piano_1cycle8.wav;
+4	SenoFM	max_level=0.0295;I1=1;I2=3.75;N1=4;N2=12;setting=0.99983; file=tables/piano_1cycle8.wav;
 
-# 5: synth organ (table synthesis)
-5	Strings	ADSR_A=0.35; ADSR_S=0.0135; ADSR_R=0.55; file=tables/synth_bass_1cycle.wav;
+# 5: synth higher-pitched organ (table synthesis)
+5	Strings	ADSR_A=0.15; ADSR_S=0.02905; ADSR_R=0.55; file=tables/synth_bass_1cycle.wav;
 
 # 6: synth organ
-6	SenoFM	ADSR_A=0.28; ADSR_S=0.008; ADSR_S2=0.4; ADSR_R=0.55;  N=40; I=1; I1=0; I2=2; N2=3; N1=1; setting=-1;
+6	SenoFM	ADSR_A=0.15; ADSR_S=0.01625; ADSR_S2=0.4; ADSR_R=0.35;  N=40; I=1; I1=0; I2=2; N2=3; N1=1; setting=-1;
 
 # 7: synth brass
-7	SenoFM	ADSR_A=0.1; ADSR_D=0.2; ADSR_S=0.8;ADSR_R=0.2;ADSR_A2=0.12;ADSR_S2=0.25; ADSR_R2=0.2; max_level=0.0045; N=40; I=1; I1=0; I2=5; N2=1; N1=1; setting=0;
+7	SenoFM	ADSR_A=0.1; ADSR_D=0.2; ADSR_S=0.8;ADSR_R=0.2;ADSR_A2=0.12;ADSR_S2=0.25; ADSR_R2=0.2; max_level=0.0135; N=40; I=1; I1=0; I2=5; N2=1; N1=1; setting=0;
 
 # 8: synth flute
 #8 SenoFM	ADSR_A=0.1;ADSR_D=0.05; ADSR_S=0.08; ADSR_R=0.2; ADSR_S2=0.9; N=40; I=1; I1=4; I2=2; N2=1; N1=3; setting=-1;
 #8	SenoFM	ADSR_A=0.1; ADSR_D=0.1; ADSR_S=0.3; ADSR_R=0.3; ADSR_S2=0.7; max_level=0.00875; N=40; I1=2; I2=1; N2=4; N1=0.5; setting=-1; setting2=-1;
-8	SenoFM	ADSR_A=0.05; ADSR_D=0.025; ADSR_S=0.7;ADSR_R=0.15;ADSR_A2=0.12;ADSR_S2=0.25; ADSR_R2=0.2; max_level=0.006; N=40;I1=0.5; I2=0; N2=1; N1=1; setting=0;
+8	SenoFM	ADSR_A=0.05; ADSR_D=0.025; ADSR_S=0.7;ADSR_R=0.15;ADSR_A2=0.12;ADSR_S2=0.25; ADSR_R2=0.2; max_level=0.01425; N=40;I1=0.5; I2=0; N2=1; N1=1; setting=0;
 
 # 9: drum kick
-9	PercussionSample    file=tables/snare_drum_kick_sample.wav; volume=0.009;
+9	PercussionSample    file=tables/snare_drum_kick_sample.wav; volume=0.019;
 
 # 10: far-away bell
-10	SenoFM    max_level=0.003; I1=0;I2=9;N1=1;N2=1.4;setting=0.999972;   #exp envelope setting
+10	SenoFM    max_level=0.0125; I1=0;I2=9;N1=1;N2=1.4;setting=0.999972;   #exp envelope setting
 
 # 11: drum kick 2
-11	PercussionSample    file=tables/drum_kick_sample.wav; volume=0.00825;
+11	PercussionSample    file=tables/drum_kick_sample.wav; volume=0.01825;
 
 # 12: drum cymbal
-12	PercussionSample    file=tables/cymbal_sample.wav; volume=0.03;
+12	PercussionSample    file=tables/cymbal_sample.wav; volume=0.0545;
+
+# 13: 
+13	PercussionSample    file=tables/rising_noise_sample.wav; volume=0.14; interrupt=0.999945;
 
 #2	PercussionPitch    ADSR_A=0.05; ADSR_D=0.07; ADSR_S=0.35; ADSR_R=0.7; file=tables/piano_1cycle4.wav;
 #2	SenoFM    ADSR_A=0.2; ADSR_D=0.05; ADSR_S=0.4; ADSR_R=0.1; setting=0.99992; I1=0;I2=1;N1=1;N2=7;file=tables/harp_1cycle.wav;

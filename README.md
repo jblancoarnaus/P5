@@ -397,7 +397,7 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
 	}
   ```
 
-  Dado la implementación, se obtienen mejores resultados con frecuencias altas. Se garantiza que el máximo de la sinusoide se encuentre en la ventana escogida. Además, en el caso particular de usar `tm`s pequeñas, podemos obtener un *clipping* más suave, que se percibe como una disminución de volumen:
+  Dado la implementación, se obtienen mejores resultados con frecuencias altas. Se garantiza que el máximo de la sinusoide se encuentre en la ventana escogida. Además, en el caso particular de usar valores de `tm` pequeños, podemos obtener un *clipping* más suave, que se percibe como una disminución de volumen:
 
    <p align="center">
    <img src="img/distortion_graph.png" width="540" align="center">
@@ -422,15 +422,70 @@ deberá venir expresado en semitonos.
 - Use el instrumento para generar un vibrato de *parámetros razonables* e incluya una gráfica en la que se
   vea, claramente, la correspondencia entre los valores `N1`, `N2` e `I` con la señal obtenida.
 
-     <p align="center">
-   <img src="img/fm_freq_graph1.png" width="640" align="center">
-   </p
+  **mini** explicación con la fórmula de fm? (x=sen(freqnota +sin(freqmodulada))) + fm = N2/N1*fnota y I es el índice de modulación
+ 
+  para implementar fm :
 
-afdsa
+  1. primero ajustar frecuencia al tono de la nota correspondiente (lo que se hacía en *Seno* )
 
-      <p align="center">
-   <img src="img/fm_time_graph1.png" width="540" align="center">
-   </p
+  2. luego aplicar sobre este la modulación, la cual hemos implementado recorriendo el vector generado en 1. con pasos de `index_sen`, el cual se va incrementando con 1-sen(fase_mod) para que la x sea causal. `fase_mod` es el argumento del seno modulado, que tiene un incremento fijo de `2 * M_PI * fm / SamplingRate`. Como que x no necesariamente contiene 1 solo periodo, hemos usado la variable x_tm, que contiene 1 periodo de la frecuencia de la nota que toque:
+
+  ```cpp
+  //modulate the signal
+  for (unsigned int i = 0; i < x.size(); ++i)
+  {
+    //check if the floating point index is out of bounds
+    if (index_sen < 0)
+    {
+      index_sen = Nnote + index_sen;
+    }
+    if ((int)floor(index_sen) > note_int - 1)
+    {
+
+      index_sen = index_sen - (note_int - 1);
+    }
+    //Obtain the index as an integer
+    index_floor_fm = floor(index_sen);
+    weight_fm = index_sen - index_floor_fm;
+
+    //fix interpolation indexes if needed
+    if (index_floor_fm == note_int - 1)
+    {
+      next_index_fm = 0;
+      index_floor_fm = note_int - 1;
+    }
+    else
+    {
+      next_index_fm = index_floor_fm + 1;
+    }
+    //interpolate table values
+    x[i] = A * ((1 - weight_fm) * x_tm[index_floor_fm] + weight_fm * (x_tm[next_index_fm]));
+
+    //update real index (phase) and modulated phase
+    index_sen = index_sen + 1 - I_array[i] * sin(mod_phase);
+    mod_phase = mod_phase + mod_phase_step;
+  }
+  ```
+
+  Si usamos parámetros similares a los del vibrato, podemos ver como los armónicos generados por fm, la cual obtenemos con la relación con n1 y n2, ganan bastante peso si se usan fm bajas:
+    <p align="center">
+  <img src="img/chowning_blocks1.png" width="400" align="center">
+  </p
+
+   a medida que se aumenta I, dependiendo de la config de N1 y N2, (creo que )puede cancelar algunos armónicos e incluso hacer que estos tengan mayor peso que la fundamental a pesar de usar fms altas:  
+
+  <p align="center">
+  <img src="img/fm_freq_graph1.png" width="640" align="center">
+  </p
+se pueden deducir N1 y N2 a través de la frec modulada (fm=N2/N1*fc, fm= 13/12*466.16=505.006 (se ve en la gráfica espacio de 500hz entre picos y la fundamental))
+
+
+en tiempo, la distorsión, si usamos parámetros más exagerados, es bastante más notable que en el vibrato (se ve más clara la sinusoide modulada)
+
+  <p align="center">
+  <img src="img/fm_time_graph1.png" width="540" align="center">
+  </p
+
 
 - Use el instrumento para generar un sonido tipo clarinete y otro tipo campana. Tome los parámetros del
   sonido (N1, N2 e I) y de la envolvente ADSR del citado artículo. Con estos sonidos, genere sendas escalas
@@ -439,6 +494,44 @@ afdsa
   * También puede colgar en el directorio work/doremi otras escalas usando sonidos *interesantes*. Por
     ejemplo, violines, pianos, percusiones, espadas láser de la
 	[Guerra de las Galaxias](https://www.starwars.com/), etc.
+
+
+
+tras implementar el esquema básico, hemos seguido la configuración propuesta por chowning, la cual añade que la I varíe en el tiempo de manera ponderada con una envolvente tipo asdr:
+
+  <p align="center">
+  <img src="img/chowning_blocks1.png" width="400" align="center">
+  </p
+
+para poder generar diferentes tipos de instrumentos, hemos añadido la posibilidad de envolvente exponencial, útil para instrumentos de percusion. ademas, los parámetros de la envolvente adsr del índice de modulación (`adsr2`)pueden escogerse de manera independiente a la asdr que controla la amplitud.
+
+para escoger tipo de envolvente hemos usado la variable `setting`:
+- ==0 envolvente estándar
+- ==-1 envolvente instrumento plano (cuerda)
+- ==decay_constant (0 < `decay_constant` < 1) envolvente instrumento de percusión. la constante introducida será el valor que se multiplicará de manera exponencial con el índice en el que se encuentra.
+
+el código de los nuevos bloques es:
+
+```cpp
+//fill array with the user-input I value (constant)
+for (unsigned int i = 0; i < x.size(); i++)
+{
+I_array[i] = (I2 - I1);
+//apply exponential envelope if selected
+if (setting > 0)
+  I_array[i] = I_array[i] * pow(setting, decay_count_I);
+}
+
+//apply time-varying function to the array
+if (setting <= 0)
+adsr2(I_array);
+
+for (unsigned int i = 0; i < x.size(); i++)
+{
+I_array[i] = I1 + I_array[i];
+}
+```
+los archivos pedidos se encuentran en el directorio indicado.
 
 ### Orquestación usando el programa synth.
 
