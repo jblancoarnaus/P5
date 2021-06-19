@@ -78,7 +78,7 @@ void PercussionPitch::command(long cmd, long note, long vel)
     float Nnote = 1 / f0note * SamplingRate;              //obtain note period in samples
     index_step = (float)N / Nnote;                        //obtain step (relationship between table period and note period)
     total_samples_played = 0;
-    gotInterrupted = false; //reset status for every new note
+    gotInterrupted = false;                               //reset status for every new note
     interrupted_count = 0;
     if (vel > 127)
       vel = 127;

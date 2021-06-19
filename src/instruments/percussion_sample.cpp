@@ -28,7 +28,7 @@ PercussionSample::PercussionSample(const std::string &param)
     volume = 1; //default value
 
       if (!kv.to_int("interrupt", interrupt))
-    interrupt = 0; //dont interrupt by default value
+    interrupt = 0; //dont interrupt by default
 
   std::string file_name;
   static string kv_null;
@@ -58,8 +58,8 @@ void PercussionSample::command(long cmd, long note, long vel)
     bActive = true;
     index = 0;
     total_samples_played = 0;
-    gotInterrupted = false; //reset status for every new note
-    interrupted_count = 0;
+    gotInterrupted = false; //reset status for every new note. By default, it can't get interrupted (interrupt==0)
+    interrupted_count = 0;  
     if (vel > 127)
       vel = 127;
     A = vel / 127.;
@@ -84,7 +84,7 @@ const vector<float> &PercussionSample::synthesize()
         total_samples_played++;
       }
 
-      if (gotInterrupted&&interrupt!=0)
+      if (gotInterrupted&&interrupt!=0) //check if it got interrupted and the settings allow it
       {
         x[i] = x[i] * pow(interrupt, (int)interrupted_count);
         interrupted_count++;

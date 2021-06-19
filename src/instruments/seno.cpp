@@ -15,13 +15,12 @@ Seno::Seno(const std::string &param)
   bActive = false;
   x.resize(BSIZE);
 
-  /*
-    You can use the class keyvalue to parse "param" and configure your instrument.
-    Take a Look at keyvalue.h    
-  */
   KeyValue kv(param);
   if (!kv.to_int("N", N))
     N = 40; //default value
+
+  if (!kv.to_float("volume", volume))
+    volume = 1; //default value
 
   index = 0;
 
@@ -90,30 +89,32 @@ const vector<float> &Seno::synthesize()
   }
   else if (not bActive)
     return x;
+
   unsigned int index_floor, next_index; //interpolation indexes
-  float weight;   //interpolation weights
+  float weight;                         //interpolation weights
+
   for (unsigned int i = 0; i < x.size(); ++i)
   {
     //check if the floating point index is out of bounds
-   if (floor(index) > tbl.size()-1)
-      index = index-floor(index);
+    if (floor(index) > tbl.size() - 1)
+      index = index - floor(index);
 
     //Obtain the index as an integer
     index_floor = floor(index);
     weight = index - index_floor;
 
     //fix interpolation indexes if needed
-    if (index_floor == (unsigned int)N-1)
+    if (index_floor == (unsigned int)N - 1)
     {
       next_index = 0;
-      index_floor = N-1;
+      index_floor = N - 1;
     }
     else
     {
       next_index = index_floor + 1;
     }
     //interpolate table values
-    x[i] = A * ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
+    x[i] = A * volume * ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
 
     //update real index
     index = index + index_step;

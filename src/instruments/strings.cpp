@@ -29,14 +29,14 @@ Strings::Strings(const std::string &param)
   if (!kv.to_float("ADSR_R", adsr_r))
     adsr_r = 0.1; //default value
 
-  adsr.set(adsr_s, adsr_a, 0, adsr_r, 1.5F);
+  adsr.set(adsr_s, adsr_a, 0, adsr_r, 1.5F);  //create envelope with no decay state
   index = 0;
+  
   std::string file_name;
   static string kv_null;
   int error = 0;
   if ((file_name = kv("file")) == kv_null)
   {
-    cerr << "Error: no se ha encontrado el campo con el fichero de la señal para un instrumento FicTabla.\nUsando sinusoide por defecto..." << endl;
     //Create a tbl with one period of a sinusoidal wave
     tbl.resize(N);
     float phase = 0, step = 2 * M_PI / (float)N;
@@ -81,11 +81,10 @@ void Strings::command(long cmd, long note, long vel)
     adsr.stop();
   }
   else if (cmd == 0)
-  { //Sound extinguished without waiting for release to end
+  { //Faster release, but don't end it abruptly
   
   adsr.set(adsr_s, adsr_a, 0, adsr_r/4, 1.5F);
   adsr.stop();
-   // adsr.end();
   }
 }
 
@@ -101,6 +100,7 @@ const vector<float> &Strings::synthesize()
     return x;
   unsigned int index_floor, next_index; //interpolation indexes
   float weight;                         //interpolation weights
+
   for (unsigned int i = 0; i < x.size(); ++i)
   {
     //check if the floating point index is out of bounds

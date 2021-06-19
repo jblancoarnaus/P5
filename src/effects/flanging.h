@@ -12,6 +12,7 @@ namespace upc {
       long double fase_sen, inc_fase_sen;
 	  std::vector<float> buffer;
 	  float	fm, I;
+    float A_flang, g, M_o;
     public:
       Flanging(const std::string &param = "");
 	  void operator()(std::vector<float> &x);

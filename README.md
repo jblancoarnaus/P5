@@ -43,6 +43,8 @@ Para los cuatro casos, deberá incluir una gráfica en la que se visualice clara
 añadir la información necesaria para su correcta interpretación, aunque esa información puede reducirse a
 colocar etiquetas y títulos adecuados en la propia gráfica (se valorará positivamente esta alternativa).
 
+* *El código usado para representar todas las gráficas de este apartado se encuentra en ``scripts/plot_adsr.py``*
+
 #### Instrumento *genérico*
 
 Tanto *InstrumentDumb* como *Seno* usan una envolvente genérica:
@@ -51,7 +53,6 @@ Tanto *InstrumentDumb* como *Seno* usan una envolvente genérica:
 <img src="img/adsr_graph1.png" width="540" align="center">
 </p
 
-El código usado para representar todas las gráficas de este apartado se encuentra en ``scripts/plot_adsr.py``
 
 #### Instrumento *percusivo*
 
@@ -87,7 +88,8 @@ Para este caso, se ha creado la clase ``Strings``. La envolvente resultante es l
 <img src="img/adsr_graph4.png" width="540" align="center">
 </p
 
-  Esta, al igual que ``PercussionPitch`` también ha sido adaptada para tocar las notas correspondientes.
+Esta, al igual que ``PercussionPitch`` también ha sido adaptada para tocar las notas correspondientes.
+
 ### Instrumentos Dumb y Seno.
 
 Implemente el instrumento `Seno` tomando como modelo el `InstrumentDumb`. La señal **deberá** formarse
@@ -113,13 +115,12 @@ Seno::Seno(const std::string &param)
   bActive = false;
   x.resize(BSIZE);
 
-  /*
-    You can use the class keyvalue to parse "param" and configure your instrument.
-    Take a Look at keyvalue.h    
-  */
   KeyValue kv(param);
   if (!kv.to_int("N", N))
     N = 40; //default value
+
+  if (!kv.to_float("volume", volume))
+    volume = 1; //default value
 
   index = 0;
 
@@ -188,30 +189,32 @@ const vector<float> &Seno::synthesize()
   }
   else if (not bActive)
     return x;
+
   unsigned int index_floor, next_index; //interpolation indexes
-  float weight;   //interpolation weights
+  float weight;                         //interpolation weights
+
   for (unsigned int i = 0; i < x.size(); ++i)
   {
     //check if the floating point index is out of bounds
-   if (floor(index) > tbl.size()-1)
-      index = index-floor(index);
+    if (floor(index) > tbl.size() - 1)
+      index = index - floor(index);
 
     //Obtain the index as an integer
     index_floor = floor(index);
     weight = index - index_floor;
 
     //fix interpolation indexes if needed
-    if (index_floor == (unsigned int)N-1)
+    if (index_floor == (unsigned int)N - 1)
     {
       next_index = 0;
-      index_floor = N-1;
+      index_floor = N - 1;
     }
     else
     {
       next_index = index_floor + 1;
     }
     //interpolate table values
-    x[i] = A * ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
+    x[i] = A * volume * ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
 
     //update real index
     index = index + index_step;
@@ -221,28 +224,22 @@ const vector<float> &Seno::synthesize()
   return x;
 }
 ```
-Tal y como podemos observar en el código, hemos añadido una interpolación lineal para los puntos que no se encuentran en la tabla.Con la interpolación tenemos la opción de tener en cuenta cómo tratamos el *'reseteo'* del índice a medida que iteramos.En primer lugar, habíamos forzado que el índice (tomando valores decimales) fuese forzado a 0 cuando se saliera de la tabla. De este modo, aparece un pequeño desencaje en la sinusoide generada porque el valor 0 no es necesariamente la fase que le corresponde (en la gráfica se puede ver como uno de los escalones se repite). Luego, hemos optado resetear el índice con el valor correspondiente (índice actual - N), que posiblemente será 0 con algunos decimales. Esto permite que la fase avance y no se *'resetee'* cada vez que termina de leer la tabla, lo cual produce resultados bastante diferentes en cuanto al sonido. 
+Tal y como podemos observar en el código, hemos añadido una interpolación lineal para los puntos que no se encuentran en la tabla. Con la interpolación hemos tenido la opción de decidir cómo tratamos el *'reseteo'* del índice cuando se llega al final de la tabla. 
+
+En primer lugar, habíamos forzado que el índice (tomando valores decimales) fuese forzado a 0 cuando se saliera de la tabla. De este modo, aparece un pequeño desencaje en la sinusoide generada porque el valor 0 no es necesariamente la fase que le corresponde (en la gráfica se puede ver como uno de los escalones se repite). Luego, hemos optado resetear el índice con el valor correspondiente (índice actual - N), que posiblemente será 0 con algunos decimales. Esto permite que la fase avance y no se *'resetee'* cada vez que termina de leer la tabla, lo cual produce resultados bastante diferentes en cuanto al sonido. 
 
 <p align="center">
 <img src="img/seno_graph1.png" width="540" align="center">
 </p
 
-Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_index_correction.wav`,`seno_without_index_correction.wav` y `seno_without_interp.wav`).
+Se han incluido las grabaciones de los tres casos en ``work/ejemplos/`` (`seno_with_index_correction.wav`,`seno_without_index_correction.wav` y `seno_without_interp.wav`).
 
 - Explique qué método se ha seguido para asignar un valor a la señal a partir de los contenidos en la tabla,
   e incluya una gráfica en la que se vean claramente (use pelotitas en lugar de líneas) los valores de la
   tabla y los de la señal generada.
   
-  Para obtener los valores de la señal se ha usado una interpolación lineal. Para implementarla, primero obtenemos el entero más cercano a la baja ``index_floor``. Haciendo esto en vez de un ``round``, nos podemos asegurar que siempre estaremos en el mismo caso (el valor almacenado en index_floor será la primera posición entre las que interpolar) y así obtener ``next_index`` sumándole 1. La ponderación para los valores con cada uno de los índices se hace con ``weight``, variable que es la diferencia entre el índice *real* y el entero inferior más próximo, y, a su vez, contiene la información de "cómo de cerca" están cada una de las dos posiciones, lo cual nos sirve para darle más o menos peso. 
+  Para obtener los valores de la señal se ha usado una interpolación lineal. Primero, obtenemos el entero más cercano a la baja ``index_floor``. Haciendo esto en vez de un ``round``, nos podemos asegurar que siempre estaremos en el mismo caso (el valor almacenado en index_floor será la primera posición entre las que interpolar) y así obtener ``next_index`` sumándole 1. La ponderación para los valores con cada uno de los índices se hace con ``weight``, variable que es la diferencia entre el índice *real* y el entero inferior más próximo, y, a su vez, contiene la información de "cómo de cerca" están cada una de las dos posiciones, lo cual nos sirve para darle más o menos peso. 
 
-  ```cpp 
-  //Obtain the index according to the step
-  index_floor = floor(index * index_step);
-  weight = index * index_step - index_floor;
-  next_index = index_floor + 1;
-  x[i] = A * ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
-
-  ```
   A continuación, podemos ver cada valor interpolado junto a los valores de la tabla que se usan:
 
    <p align="center">
@@ -258,16 +255,19 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
   {
     if (cmd == 9)
     { //'Key' pressed: attack begins
-      bActive = true;
-      index = 0;
-      if (vel > 127)
-        vel = 127;
+     bActive = true;
+     index = 0;
+      total_samples_played = 0;
+     gotInterrupted = false; //reset status for every new note. By default, it can't get interrupted (interrupt==0)
+      interrupted_count = 0;  
+     if (vel > 127)
+       vel = 127;
       A = vel / 127.;
     }
   }
   ```
 
-  Este es el único caso en que la reproducción nunca se interrumpe o acaba independientemente de los comandos en los *scores*. Ni el pitch ni el envolvente ADSR tienen ningún efecto sobre la grabación.
+  Este es el único caso en que la reproducción no se interrumpe (a no ser que el usuario especifique lo contrario) independientemente de los comandos en los *scores*. Ni el pitch ni el envolvente ADSR tienen ningún efecto sobre la grabación.
   
   El resto de métodos ``command()`` siguen manteniendo los casos específicos según se recibe ``cmd == 8`` o ``cmd == 0``.
 
@@ -292,13 +292,13 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
 
   *Parámetros: Tremolo A=0.5; fm=4;*
 
-  A partir de la relación entre los máximos y mínimos de la envolvente se puede obtener ``A``. El periodo de la envolvente corresponde al de la señal usada para escalar la sinusoide principal.
+  A partir de la relación entre los máximos y mínimos de la envolvente se puede obtener ``A``. El período de la envolvente corresponde al de la señal usada para escalar la sinusoide principal.
 
   El código para generar esta gráfica y estimar los parámetros se encuentra en ``scripts/tremolo_graph.py``
 
   #### Vibrato
 
-  Para el vibrato, con la finalidad de tener notas de frecuencias más altas para poder ver mejor lo que pasa en las gráficas, hemos usado una nota de 90 semitonos (466.16 Hz)
+  Para el vibrato, con la finalidad de ver mejor lo que pasa en las gráficas, hemos usado una nota de 90 semitonos (466.16 Hz)
 
   Para ver sus efectos, primero hemos visto qué pasaba en frecuencia con valores bajos de `I`, propios de un vibrato (`I==0.25`):
 
@@ -306,7 +306,7 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
    <img src="img/vibrato_freq_graph1.png" width="460" align="center">
    </p
   
-  Como se puede ver, vemos un pico en la frecuencia del tono principal. También una pequeña distorsión en valores ± `fm` (500 Hz). Es decir, el parámetro `fm` es el que decidirá dónde y cada cuando aparecen armónicos respecto la frecuencia central. 
+  Como se puede ver, vemos un pico en la frecuencia del tono principal. También hay una pequeña distorsión en valores ± `fm` (500 Hz). Es decir, el parámetro `fm` es el que decidirá dónde y cada cuando aparecen armónicos respecto la frecuencia central. 
 
   Aumentando la extensión del vibrato `I`, los picos que se generan en los armónicos (múltiplos de fm desde la frecuencia central) van ganando importancia. En este ejemplo, podemos incluso estimar las frecuencias `fc` y  `fm` a partir de los índices dónde se encuentran los picos máximos de la transformada:
 
@@ -320,7 +320,7 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
    <img src="img/vibrato_freq_graph3.png" width="600" align="center">
    </p
   
-  Si hacemos zoom, vemos que a medida que I aumenta, la frecuencia fundamental pierde peso, ya que se va repartiendo en los armónicos:
+  Si hacemos *zoom*, vemos que a medida que I aumenta, la frecuencia fundamental pierde peso, ya que se va repartiendo en los armónicos:
 
    <p align="center">
    <img src="img/vibrato_freq_graph3_zoom.png" width="500" align="center">
@@ -343,7 +343,7 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
 
   Para implementarlo, considerando que nuestras señales tienen amplitudes variables (envolvente ADSR), hemos usado una ventana deslizante para que el clipping se realizara de forma local. 
 
-  Los parámetros de entrada desde el fichero `effects` un umbral `t`. Es el porcentaje de la amplitud respecto el que se hará el clipping. También, un tiempo `tm`, que es la duración de la ventana en segundos. Teniendo estos valores en cuenta, se calculan los valores mínimos y máximos de la ventana y se recorta la señal respecto ellos, tal y como podemos ver infra:
+  Los parámetros de entrada se deciden desde el fichero `effects`. Uno de ellos es `t`, porcentaje de la amplitud respecto el que se hará el clipping. También, se especifica un tiempo `tm`, que es la duración de la ventana en segundos. Teniendo estos valores en cuenta, se calculan los valores mínimos y máximos de la ventana y se recorta la señal respecto ellos, tal y como podemos ver infra:
 
   ```cpp
 	void Distortion::operator()(std::vector<float> &x)
@@ -397,7 +397,7 @@ Se han incluido las grabaciones de los tres casos en ``ejemplos/`` (`seno_with_i
 	}
   ```
 
-  Dado la implementación, se obtienen mejores resultados con frecuencias altas. Se garantiza que el máximo de la sinusoide se encuentre en la ventana escogida. Además, en el caso particular de usar valores de `tm` pequeños, podemos obtener un *clipping* más suave, que se percibe como una disminución de volumen:
+  Dada la implementación, se obtienen mejores resultados con frecuencias altas. Se garantiza que el máximo de la sinusoide se encuentre en la ventana escogida. Además, en el caso particular de usar valores de `tm` pequeños, podemos obtener un clipping más suave, que se percibe como una disminución de volumen:
 
    <p align="center">
    <img src="img/distortion_graph.png" width="540" align="center">
@@ -422,13 +422,27 @@ deberá venir expresado en semitonos.
 - Use el instrumento para generar un vibrato de *parámetros razonables* e incluya una gráfica en la que se
   vea, claramente, la correspondencia entre los valores `N1`, `N2` e `I` con la señal obtenida.
 
-  **mini** explicación con la fórmula de fm? (x=sen(freqnota +sin(freqmodulada))) + fm = N2/N1*fnota y I es el índice de modulación
- 
-  para implementar fm :
+La fórmula FM, dada con la expresión:
 
-  1. primero ajustar frecuencia al tono de la nota correspondiente (lo que se hacía en *Seno* )
+   <p align="center">
+   <img src="img/eq_fm.png" width="540" align="center">
+   </p
 
-  2. luego aplicar sobre este la modulación, la cual hemos implementado recorriendo el vector generado en 1. con pasos de `index_sen`, el cual se va incrementando con 1-sen(fase_mod) para que la x sea causal. `fase_mod` es el argumento del seno modulado, que tiene un incremento fijo de `2 * M_PI * fm / SamplingRate`. Como que x no necesariamente contiene 1 solo periodo, hemos usado la variable x_tm, que contiene 1 periodo de la frecuencia de la nota que toque:
+La usamos para la implementación de frecuencia modulada. 
+
+Para obtener fm, usamos esta relación:
+
+   <p align="center">
+   <img src="img/eq_fm2.png" width="140" align="center">
+   </p
+
+Donde fc es la frecuencia de cada nota. 
+
+De cara a la implementación, lo hemos hecho en dos pasos:
+
+  1. Ajustamos frecuencia al tono de la nota correspondiente (lo que se hacía en *Seno*)
+
+  2. Recorremos el vector generado en 1. con saltos de `index_sen`. Usamos `fase_mod` como argumento del seno modulado, que tiene un incremento fijo de `2 * M_PI * fm / SamplingRate`. Como que la señal x no necesariamente contiene 1 solo periodo, hemos usado la variable `x_tm`, que contiene 1 periodo de la frecuencia de la nota que correspondiente:
 
   ```cpp
   //modulate the signal
@@ -465,22 +479,24 @@ deberá venir expresado en semitonos.
     index_sen = index_sen + 1 - I_array[i] * sin(mod_phase);
     mod_phase = mod_phase + mod_phase_step;
   }
-  ```
 
-  Si usamos parámetros similares a los del vibrato, podemos ver como los armónicos generados por fm, la cual obtenemos con la relación con n1 y n2, ganan bastante peso si se usan fm bajas:
-    <p align="center">
-  <img src="img/chowning_blocks1.png" width="400" align="center">
+  ```
+  Usando parámetros similares a los del vibrato, podemos ver como los armónicos generados por fm ganan bastante peso si se usan fm bajas. A modo de ejemplo, en la siguiente imagen podemos ver que con una frecuencia modulada pequeña y un valor `I==1.25` semitonos, la frecuencia de la nota pierde peso respecto los armónicos:
+
+  <p align="center">
+  <img src="img/fm_vibrato_graph.png" width="400" align="center">
   </p
 
-   a medida que se aumenta I, dependiendo de la config de N1 y N2, (creo que )puede cancelar algunos armónicos e incluso hacer que estos tengan mayor peso que la fundamental a pesar de usar fms altas:  
+  A medida que se aumenta I (valores ahora en lineal), aún modificando la configuración de `N1` y `N2` para generar `fms` más altas, los armónicos siguen teniendo mayor peso que la fundamental:  
 
   <p align="center">
   <img src="img/fm_freq_graph1.png" width="640" align="center">
   </p
-se pueden deducir N1 y N2 a través de la frec modulada (fm=N2/N1*fc, fm= 13/12*466.16=505.006 (se ve en la gráfica espacio de 500hz entre picos y la fundamental))
+
+Se pueden deducir `N1` y `N2` a través de la frecuencia modulada (fm=N2/N1*fc, fm= 13/12*466.16=505.006 -> en la gráfica hay unos 500 Hz entre picos y la fundamental).
 
 
-en tiempo, la distorsión, si usamos parámetros más exagerados, es bastante más notable que en el vibrato (se ve más clara la sinusoide modulada)
+En tiempo, la distorsión, usando parámetros más exagerados, los efectos son bastante más notables que en el vibrato:
 
   <p align="center">
   <img src="img/fm_time_graph1.png" width="540" align="center">
@@ -496,21 +512,20 @@ en tiempo, la distorsión, si usamos parámetros más exagerados, es bastante m�
 	[Guerra de las Galaxias](https://www.starwars.com/), etc.
 
 
-
-tras implementar el esquema básico, hemos seguido la configuración propuesta por chowning, la cual añade que la I varíe en el tiempo de manera ponderada con una envolvente tipo asdr:
+Tras implementar el esquema básico, hemos seguido la configuración propuesta por Chowning, la cual añade que la I varíe en el tiempo de manera ponderada con una envolvente tipo ADSR:
 
   <p align="center">
   <img src="img/chowning_blocks1.png" width="400" align="center">
   </p
 
-para poder generar diferentes tipos de instrumentos, hemos añadido la posibilidad de envolvente exponencial, útil para instrumentos de percusion. ademas, los parámetros de la envolvente adsr del índice de modulación (`adsr2`)pueden escogerse de manera independiente a la asdr que controla la amplitud.
+Para poder generar diferentes tipos de instrumentos, hemos añadido la posibilidad de envolvente exponencial, útil para instrumentos de percusión. Además, los parámetros de la envolvente ADSR del índice de modulación (`adsr2`) pueden escogerse de manera independiente a la ADSR que controla la amplitud.
 
-para escoger tipo de envolvente hemos usado la variable `setting`:
-- ==0 envolvente estándar
-- ==-1 envolvente instrumento plano (cuerda)
-- ==decay_constant (0 < `decay_constant` < 1) envolvente instrumento de percusión. la constante introducida será el valor que se multiplicará de manera exponencial con el índice en el que se encuentra.
+Para escoger tipo de envolvente, hemos usado la variable `setting`:
+- `==0` envolvente estándar
+- `==-1` envolvente instrumento plano (cuerda)
+- `==decay_constant` (0 < `decay_constant` < 1) envolvente instrumento de percusión. La constante introducida será el valor que se multiplicará de manera exponencial con el índice en el que se encuentra.
 
-el código de los nuevos bloques es:
+El código para incorporar los nuevos bloques es:
 
 ```cpp
 //fill array with the user-input I value (constant)
@@ -531,7 +546,7 @@ for (unsigned int i = 0; i < x.size(); i++)
 I_array[i] = I1 + I_array[i];
 }
 ```
-los archivos pedidos se encuentran en el directorio indicado.
+Los archivos pedidos se encuentran en el directorio indicado.
 
 ### Orquestación usando el programa synth.
 
@@ -545,6 +560,14 @@ Use el programa `synth` para generar canciones a partir de su partitura MIDI. Co
 - Indique, a continuación, la orden necesaria para generar la señal (suponiendo que todos los archivos
   necesarios están en directorio indicado).
 
+
+Los comandos para generar tanto el fichero `score` como el `.wav` son:
+
+```bash 
+midi2sco --bpm 116 work/music/ToyStory_A_Friend_in_me.mid work/music/ToyStory_A_Friend_in_me.sco
+synth work/music/friend_in_me.orc work/music/ToyStory_A_Friend_in_me.sco work/music/ToyStory_A_Friend_in_me.wav
+```
+
 También puede orquestar otros temas más complejos, como la banda sonora de *Hawaii5-0* o el villacinco de
 John Lennon *Happy Xmas (War Is Over)* (fichero `The_Christmas_Song_Lennon.sco`), o cualquier otra canción
 de su agrado o composición. Se valorará la riqueza instrumental, su modelado y el resultado final.
@@ -552,3 +575,19 @@ de su agrado o composición. Se valorará la riqueza instrumental, su modelado y
   `work/music`.
 - Indique, a continuación, la orden necesaria para generar cada una de las señales usando los distintos
   ficheros.
+
+Por un lado, se ha orquestrado la banda sonora de *Hawaii 5 0* usando exclusivamente síntesis por tabla:
+
+```bash
+midi2sco --bpm 122 work/music/Hawaii5-0.mid work/music/Hawaii5-0.sco
+synth work/music/hawaii50.orc work/music/Hawaii5-0.sco work/music/Hawaii5-0.wav
+```
+
+Por otro lado, también se ha generado una canción usando prácticamente solo instrumentos FM (*ANiMA*, de Xi):
+
+```bash
+midi2sco --bpm 123 work/music/ANiMA.mid work/music/ANiMA.sco
+synth work/music/anima.orc work/music/ANiMA.sco work/music/ANiMA.wav
+```
+
+Ambas se encuentran en el directorio `work/music`. Los instrumentos usados para cada canción están indicados en sus respectivos ficheros `.orc`. Además, hay las escalas de algunos de ellos en `work/doremi`.

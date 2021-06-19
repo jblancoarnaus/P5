@@ -23,9 +23,6 @@ SenoFM::SenoFM(const std::string &param)
   if (!kv.to_int("N", N))
     N = 40; //default value
 
-  if (!kv.to_float("I", I))
-    I = 1; //Modulation index
-
   //signal amplitude adsr
   if (!kv.to_float("ADSR_A", adsr_a))
     adsr_a = 0.1; //"Attack" adsr parameter
@@ -102,7 +99,6 @@ SenoFM::SenoFM(const std::string &param)
     if (error < 0)
     {
       cerr << "Error: no se puede leer el fichero " << file_name << " para un instrumento FicTabla" << endl;
-
       throw -1;
     }
     N = tbl.size();
@@ -116,12 +112,12 @@ void SenoFM::command(long cmd, long note, long vel)
     bActive = true;
     adsr.start();
     adsr2.start();
-    index = 0;
     float f0note = pow(2, ((float)note - 69) / 12) * 440; //convert note in semitones to frequency (Hz)
     Nnote = 1 / f0note * SamplingRate;                    //obtain note period in samples
     index_step = (float)N / Nnote;                        //obtain step (relationship between table period and note period)
 
     //reset counters/phase
+    index = 0;
     index_sen = 0;
     mod_phase = 0;
     decay_count = 0;
@@ -129,6 +125,9 @@ void SenoFM::command(long cmd, long note, long vel)
 
     fm = f0note * N2 / N1;                         //modulating frequency
     mod_phase_step = 2 * M_PI * fm / SamplingRate; //step of the modulating sine I*sin(2*pi*fm/SamplingRate)
+
+    note_int = round(Nnote);
+    x_tm.resize(note_int);
 
     if (vel > 127)
       vel = 127;
@@ -142,7 +141,7 @@ void SenoFM::command(long cmd, long note, long vel)
   }
   else if (cmd == 0)
   { 
-  //faster release, but don't end it abruptly
+  //release faster, but don't end it abruptly
     adsr.set(adsr_s, adsr_a, adsr_d, adsr_r / 4, 1.5F);
     adsr.stop();
     adsr2.set(adsr_s2, adsr_a2, adsr_d2, adsr_r2 / 4, 1.5F);
@@ -161,8 +160,6 @@ const vector<float> &SenoFM::synthesize()
   else if (not bActive)
     return x;
 
-  int note_int = round(Nnote);
-  std::vector<float> x_tm(note_int);
   unsigned int index_floor, next_index; //interpolation indexes
   float weight, weight_fm;              //interpolation weights
   int index_floor_fm, next_index_fm;    //frequency interpolation weights
@@ -183,7 +180,7 @@ const vector<float> &SenoFM::synthesize()
 
   for (unsigned int i = 0; i < x.size(); i++)
   {
-    I_array[i] = I1 + I_array[i];
+    I_array[i] = (I1 + I_array[i]);
   }
 
   //fill x_tm with a period of the new signal
