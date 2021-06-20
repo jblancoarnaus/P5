@@ -1,7 +1,6 @@
 #include <iostream>
 #include "tremolo.h"
 #include "vibrato.h"
-#include "flanging.h"
 #include "distortion.h"
 
 /*
@@ -25,9 +24,6 @@ namespace upc {
     }
 	else if (name == "Vibrato") {
       pEffect = (Effect *) new Vibrato(parameters);
-    }
-	else if (name == "Flanging") {
-      pEffect = (Effect *) new Flanging(parameters);
     }
     return pEffect;
   }

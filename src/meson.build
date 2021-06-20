@@ -18,7 +18,6 @@ sources = [
 	'effects/tremolo.cpp',
 	'effects/vibrato.cpp',
 	'effects/distortion.cpp',
-	'effects/flanging.cpp',
 ]
 
 executable(

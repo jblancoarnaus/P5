@@ -5,7 +5,7 @@
 3	SenoFM	ADSR_A=0.02; ADSR_D=0.05; ADSR_S=0.3; ADSR_R=0.55; ADSR_S2=1; max_level=0.085; N=40; I1=0; I2=2; N2=3; N1=1; setting=0; setting2=-1;
 
 # 4: santoor (piano-ish lead around 1:12)
-4	SenoFM	max_level=0.1495;I2=3.75;N1=4;N2=12;setting=0.99983; file=work/music/tables/piano_1cycle.wav;
+4	SenoFM	max_level=0.155;I2=3.75;N1=4;N2=12;setting=0.99983; file=work/music/tables/piano_1cycle.wav;
 
 # 5: synth organ (table synthesis)
 5	Strings	ADSR_A=0.02; ADSR_S=0.1875; ADSR_R=0.5; file=work/music/tables/synth_bass_1cycle.wav;
@@ -32,4 +32,4 @@
 12	PercussionSample    file=work/music/tables/cymbal_sample.wav; volume=0.1354;
 
 # 13: rising noise
-13	PercussionSample    file=work/music/tables/rising_noise_sample.wav; volume=0.2775; interrupt=0.999945;
+13	PercussionSample    file=work/music/tables/rising_noise_sample.wav; volume=0.3475; interrupt=0.999945;

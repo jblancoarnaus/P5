@@ -416,8 +416,7 @@ Se han incluido las grabaciones de los tres casos en ``work/ejemplos/`` (`seno_w
 
 Construya un instrumento de síntesis FM, según las explicaciones contenidas en el enunciado y el artículo
 de [John M. Chowning](https://ccrma.stanford.edu/sites/default/files/user/jc/fm_synthesispaper-2.pdf). El
-instrumento usará como parámetros **básicos** los números `N1` y `N2`, y el índice de modulación `I`, que
-deberá venir expresado en semitonos.
+instrumento usará como parámetros **básicos** los números `N1` y `N2`, y el índice de modulación `I`.
 
 - Use el instrumento para generar un vibrato de *parámetros razonables* e incluya una gráfica en la que se
   vea, claramente, la correspondencia entre los valores `N1`, `N2` e `I` con la señal obtenida.
